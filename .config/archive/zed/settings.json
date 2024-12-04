@@ -1,0 +1,192 @@
+{
+    "theme": "Rosé Pine",
+    "buffer_font_family": "Monaspace Neon Var",
+    "buffer_font_features": {
+        "ss01": true,
+        "ss02": true,
+        "ss03": true,
+        "ss04": true,
+        "ss05": true,
+        "ss06": true,
+        "ss07": true,
+        "ss08": true,
+        "dlig": true,
+        "calt": true
+    },
+    "buffer_font_size": 16,
+    "buffer_line_height": "comfortable",
+    "ui_font_family": "Monaspace Neon Var",
+    "ui_font_size": 18,
+    "vim_mode": true,
+    "hover_popover_enabled": true,
+    "show_wrap_guides": true,
+    "toolbar": {
+        "breadcrumbs": true,
+        "quick_actions": true
+    },
+    "scrollbar": {
+        "show": "auto",
+        "git_diff": true,
+        "selections": true,
+        "symbols_selections": true,
+        "diagnostics": true
+    },
+    "vertical_scroll_margin": 3,
+    "relative_line_numbers": true,
+    "inlay_hints": {
+        "enabled": false,
+        "show_type_hints": true,
+        "show_parameter_hints": true,
+        "show_other_hints": true
+    },
+    "project_panel": {
+        "default_width": 220,
+        "dock": "left",
+        "file_icons": true,
+        "folder_icons": true,
+        "git_status": true,
+        "indent_size": 10,
+        "auto_reveal_entries": true
+    },
+    "collaboration_panel": {
+        "button": false,
+        "dock": "left",
+        "default_width": 220
+    },
+    "chat_panel": {
+        "button": false,
+        "dock": "right",
+        "default_width": 450
+    },
+    "notification_panel": {
+        "button": false,
+        "dock": "right",
+        "default_width": 450
+    },
+    "assistant": {
+        "default_model": {
+            "provider": "openai",
+            "model": "gpt-4-turbo-preview"
+        },
+        "version": "2",
+        "button": true,
+        "dock": "right",
+        "default_width": 450,
+        "default_height": 320,
+        "openai_api_url": null,
+        "default_open_ai_model": null
+    },
+    "enable_language_server": true,
+    "autosave": "on_focus_change",
+    "tabs": {
+        "git_status": true,
+        "close_position": "right"
+    },
+    "remove_trailing_whitespace_on_save": true,
+    "extend_comment_on_newline": true,
+    "ensure_final_newline_on_save": true,
+    "format_on_save": "on",
+    "formatter": "auto",
+    "soft_wrap": "none",
+    "preferred_line_length": 80,
+    "hard_tabs": false,
+    "tab_size": 4,
+    "auto_update": true,
+    "diagnostics": {
+        "include_warnings": true
+    },
+    "git": {
+        "git_gutter": "tracked_files",
+        "inline_blame": {
+            "enabled": false
+        }
+    },
+    "copilot": {
+        "disabled_globs": [
+            ".env"
+        ]
+    },
+    "terminal": {
+        "shell": "system",
+        "dock": "right",
+        "default_width": 450,
+        "default_height": 320,
+        "working_directory": "current_project_directory",
+        "blinking": "terminal_controlled",
+        "alternate_scroll": "off",
+        "option_as_meta": false,
+        "copy_on_select": false,
+        "env": {},
+        "line_height": "comfortable",
+        "detect_venv": {
+            "on": {
+                "directories": [
+                    ".env",
+                    "env",
+                    ".venv",
+                    "venv"
+                ],
+                "activate_script": "default"
+            }
+        }
+    },
+    "semantic_index": {
+        "enabled": true
+    },
+    "languages": {
+        "Haskell": {
+            "language_servers": [
+                "hls"
+            ]
+        },
+        "Ruby": {
+            "language_servers": [
+                "solargraph",
+                "!ruby-lsp",
+                "!rubocop"
+            ]
+        }
+    },
+    "prettier": {
+        "prose-wrap": "always"
+    },
+    "lsp": {
+        "rust-analyzer": {},
+        "gopls": {
+            "initialization_options": {
+                "gofumpt": true,
+                "hints": {
+                    "assignVariableTypes": true,
+                    "compositeLiteralFields": true,
+                    "compositeLiteralTypes": true,
+                    "constantValues": true,
+                    "functionTypeParameters": true,
+                    "parameterNames": true,
+                    "rangeVariableTypes": true
+                }
+            }
+        },
+        "golangci_lint_ls": {
+            "initialization_options": {
+                "lintTool": "golangci-lint"
+            }
+        },
+        "csharp-ls": {},
+        "solargraph": {
+            "initialization_options": {
+                "diagnostics": true,
+                "formatting": false
+            }
+        },
+        "hls": {
+            "initialization_options": {
+                "formattingProvider": "fourmolu"
+            }
+        },
+        "pyright": {
+            "initialization_options": {
+                "useLibraryCodeForTypes": true
+            }
+        }
+    }
+}

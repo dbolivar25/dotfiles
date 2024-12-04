@@ -1,0 +1,46 @@
+colors:
+  # Base file/directory colors
+  file:
+    text: "e0def4" # white - regular files
+  directory:
+    text: "9ccfd8" # blue - directories
+
+  # Permissions
+  permissions:
+    read: "31748f" # green
+    write: "f6c177" # yellow
+    exec: "eb6f92" # red
+    exec-sticky: "c4a7e7" # magenta
+    no-access: "6e6a86" # bright black
+
+  # Special files
+  symlink:
+    text: "c4a7e7" # magenta
+  special:
+    text: "ebbcba" # cyan
+
+  # Git status colors
+  git:
+    modified: "f6c177" # yellow
+    deleted: "eb6f92" # red
+    renamed: "31748f" # green
+    added: "31748f" # green
+    untracked: "6e6a86" # bright black
+    ignored: "6e6a86" # bright black
+    conflicted: "eb6f92" # red
+
+  # Size colors for --color-scale
+  size:
+    small: "9ccfd8" # blue
+    medium: "c4a7e7" # magenta
+    large: "eb6f92" # red
+
+  # User/group colors
+  user_id:
+    text: "e0def4" # white
+  group_id:
+    text: "908caa" # muted lavender
+
+  # Header colors
+  header:
+    text: "908caa" # muted lavender

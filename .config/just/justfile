@@ -1,0 +1,21 @@
+@help:
+    just -g --list
+
+docker-nuke:
+    docker system prune -f
+    docker volume prune -f
+
+git-nuke:
+    git clean -fdx
+    git reset --hard
+
+parse-amex FILE_PATH:
+    #!/usr/bin/env nu
+    open {{FILE_PATH}}
+    | reject Date
+    | where Amount > 0
+    | group-by Description
+    | transpose Location Charges
+    | each { |group| {Description: $group.Location, Total: ($group.Charges | get Amount | math sum)} }
+    | sort-by Total -r
+    | append [{Description: "", Total: ""}, {Description: "GRAND TOTAL", Total: ($in | get Total | math sum)}]
