@@ -1,112 +1,109 @@
--- File: lua/plugins/coding/formatting.lua
-
 return {
-	{
-		"stevearc/conform.nvim",
-		opts = {
-			formatters_by_ft = {
-				-- Ansible
-				ansible = { "ansible-lint" },
+    {
+        "stevearc/conform.nvim",
+        opts = {
+            formatters_by_ft = {
+                -- Ansible
+                ansible = { "ansible-lint" },
 
-				-- Bash
-				sh = { "shfmt", "beautysh" },
+                -- Bash
+                sh = { "shfmt", "beautysh" },
 
-				-- C/C++
-				c = { "clang-format" },
-				cpp = { "clang-format" },
+                -- C/C++
+                c = { "clang-format" },
+                cpp = { "clang-format" },
 
-				-- Clojure
-				clojure = { "cljfmt" },
+                -- Clojure
+                clojure = { "cljfmt" },
 
-				-- C#
-				cs = { "csharpier" },
+                -- C#
+                cs = { "csharpier" },
 
-				-- Dockerfile
-				dockerfile = { "hadolint" },
+                -- Dockerfile
+                dockerfile = { "hadolint" },
 
-				-- Go
-				go = {
-					"gofumpt",
-					"goimports",
-				},
+                -- Go
+                go = {
+                    "gofumpt",
+                    "goimports",
+                },
 
-				-- Haskell
-				haskell = { "fourmolu" },
+                -- Haskell
+                haskell = { "fourmolu" },
 
-				-- JSON
-				json = { "prettier" },
+                -- JSON
+                json = { "prettier" },
 
-				-- Lua
-				lua = { "stylua" },
+                -- Lua
+                lua = { "stylua" },
 
-				-- Markdown
-				markdown = {
-					"prettier",
-					"markdownlint",
-					"markdown-toc",
-				},
+                -- Markdown
+                markdown = {
+                    "prettier",
+                    "markdownlint",
+                    "markdown-toc",
+                },
 
-				-- OCaml
-				ocaml = { "ocamlformat" },
+                -- OCaml
+                ocaml = { "ocamlformat" },
 
-				-- PowerShell
-				powershell = { "powershell-editor-services" },
+                -- PowerShell
+                powershell = { "powershell-editor-services" },
 
-				-- Protocol Buffers
-				protobuf = { "protolint" },
+                -- Protocol Buffers
+                protobuf = { "protolint" },
 
-				-- Python
-				python = { "black", "ruff_format" },
+                -- Python
+                python = { "black", "ruff_format" },
 
-				-- Ruby
-				ruby = {
-					"rubocop",
-					"erb-formatter",
-				},
-				eruby = { "erb-formatter" },
+                -- Ruby
+                ruby = {
+                    "rubocop",
+                    "erb-formatter",
+                },
+                eruby = { "erb-formatter" },
 
-				-- Rust
-				rust = { "rustfmt" },
+                -- Rust
+                rust = { "rustfmt" },
 
-				-- SQL
-				sql = {
-					"sqlfmt",
-					"sqlfluff",
-				},
+                -- SQL
+                sql = {
+                    "sqlfmt",
+                    "sqlfluff",
+                },
 
-				-- TOML
-				toml = { "taplo" },
+                -- TOML
+                toml = { "taplo" },
 
-				-- TypeScript/JavaScript
-				typescript = { "prettier" },
-				javascript = { "prettier" },
-				javascriptreact = { "prettier" },
-				typescriptreact = { "prettier" },
+                -- TypeScript/JavaScript
+                typescript = { "prettier" },
+                javascript = { "prettier" },
+                javascriptreact = { "prettier" },
+                typescriptreact = { "prettier" },
 
-				-- YAML
-				yaml = { "prettier" },
+                -- YAML
+                yaml = { "prettier" },
 
-				-- Multiple/Other filetypes
-				["*"] = { "codespell" },
-				["_"] = { "trim_whitespace", "trim_newlines" },
-			},
-			formatters = {
-				prettier = {
-					prepend_args = { "--print-width", "80", "--prose-wrap", "always" },
-				},
-				shfmt = {
-					prepend_args = { "-i", "4", "-ci" },
-				},
-				black = {
-					prepend_args = { "--line-length", "100" },
-				},
-				sqlfluff = {
-					prepend_args = { "fix", "--force" },
-				},
-				stylua = {
-					prepend_args = { "--indent-type", "Spaces", "--indent-width", "4" },
-				},
-			},
-		},
-	},
+                -- Multiple/Other filetypes
+                ["_"] = { "trim_whitespace", "trim_newlines" },
+            },
+            formatters = {
+                prettier = {
+                    prepend_args = { "--print-width", "80", "--prose-wrap", "always" },
+                },
+                shfmt = {
+                    prepend_args = { "-i", "4", "-ci" },
+                },
+                black = {
+                    prepend_args = { "--line-length", "100" },
+                },
+                sqlfluff = {
+                    prepend_args = { "fix", "--force" },
+                },
+                stylua = {
+                    prepend_args = { "--indent-type", "Spaces", "--indent-width", "4" },
+                },
+            },
+        },
+    },
 }

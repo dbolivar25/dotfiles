@@ -1,78 +1,76 @@
 return {
-	{
-		"mfussenegger/nvim-lint",
-		opts = {
-			linters_by_ft = {
-				-- Ansible
-				-- ansible = { "ansible-lint" },
+    {
+        "mfussenegger/nvim-lint",
+        opts = {
+            linters_by_ft = {
+                -- Ansible
+                -- ansible = { "ansible-lint" },
 
-				-- Bash
-				sh = { "shellcheck" },
+                -- Bash
+                sh = { "shellcheck" },
 
-				-- C/C++
-				c = { "cpplint" },
-				cpp = { "cpplint" },
+                -- C/C++
+                c = { "cpplint" },
+                cpp = { "cpplint" },
 
-				-- Clojure
-				clojure = { "clj-kondo" },
+                -- Clojure
+                clojure = { "clj-kondo" },
 
-				-- CMake
-				cmake = { "cmakelint" },
+                -- CMake
+                cmake = { "cmakelint" },
 
-				-- Dockerfile
-				dockerfile = { "hadolint" },
+                -- Dockerfile
+                dockerfile = { "hadolint" },
 
-				-- Go
-				go = { "golangci-lint" },
+                -- Go
+                go = { "golangci-lint" },
 
-				-- Haskell
-				haskell = { "hlint" },
+                -- Haskell
+                haskell = { "hlint" },
 
-				-- Markdown
-				markdown = {
-					"markdownlint",
-				},
+                -- Markdown
+                markdown = {
+                    "markdownlint",
+                },
 
-				-- Protocol Buffers
-				protobuf = { "protolint" },
+                -- Protocol Buffers
+                protobuf = { "protolint" },
 
-				-- Python
-				python = {
-					"ruff",
-					-- "pylint",
-				},
+                -- Python
+                python = {
+                    "ruff",
+                },
 
-				-- Ruby
-				ruby = {
-					"rubocop",
-					-- "erb-lint",
-				},
-				eruby = { "erb-lint" },
+                -- Ruby
+                ruby = {
+                    "rubocop",
+                },
+                eruby = { "erb-lint" },
 
-				-- SQL
-				sql = { "sqlfluff" },
+                -- SQL
+                sql = { "sqlfluff" },
 
-				-- YAML
-				yaml = { "yamllint" },
-			},
-			linters = {
-				shellcheck = {
-					args = {
-						"--severity=warning",
-						"--shell=bash",
-						"--enable=all",
-						"--format=json",
-						"-",
-					},
-				},
-				golangci_lint = {
-					args = {
-						"run",
-						"--out-format=json",
-						"--issues-exit-code=1",
-					},
-				},
-			},
-		},
-	},
+                -- YAML
+                yaml = { "yamllint" },
+            },
+            linters = {
+                shellcheck = {
+                    args = {
+                        "--severity=warning",
+                        "--shell=bash",
+                        "--enable=all",
+                        "--format=json",
+                        "-",
+                    },
+                },
+                golangci_lint = {
+                    args = {
+                        "run",
+                        "--out-format=json",
+                        "--issues-exit-code=1",
+                    },
+                },
+            },
+        },
+    },
 }
