@@ -43,7 +43,6 @@ return {
 		notifier = {
 			enabled = true,
 			timeout = 2000,
-			-- Match your dashboard's aesthetic
 			icons = {
 				error = "󰅚 ",
 				warn = " ",
@@ -51,16 +50,12 @@ return {
 				debug = " ",
 				trace = "󰁪 ",
 			},
-			-- Use rounded borders to match modern UI feel
 			style = "fancy",
 			top_down = true,
-			-- Slightly transparent background
 			margin = { top = 0, right = 1, bottom = 0 },
 			padding = true,
-			-- Reasonable size constraints
 			width = { min = 40, max = 0.4 },
 			height = { min = 1, max = 0.6 },
-			-- Modern timestamp format
 			date_format = "%H:%M",
 		},
 	},
