@@ -14,9 +14,10 @@ return {
             --  ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝]],
             -- },
             sections = {
+                {},
                 {
                     section = "terminal",
-                    cmd = "chafa ~/.config/nvim/assets/wall.png --format symbols --symbols vhalf --size 60x17 --stretch; sleep .1",
+                    cmd = "chafa ~/.config/nvim/assets/yosemite_forest.png --format symbols --symbols vhalf --size 60x17 --stretch; sleep .1",
                     height = 17,
                     padding = 1,
                 },
@@ -27,6 +28,12 @@ return {
         notifier = {
             enabled = true,
             timeout = 2000,
+        },
+        quickfile = {
+            enabled = true,
+        },
+        bigfile = {
+            enabled = true,
         },
     },
     dependencies = {
