@@ -8,6 +8,7 @@ fish_add_path $HOME/.cabal/bin
 fish_add_path $HOME/.ghcup/bin
 fish_add_path /Applications/Postgres.app/Contents/Versions/latest/bin
 fish_add_path /usr/local/go/bin
+fish_add_path /Users/danielbolivar/.avm/bin
 fish_add_path /Users/danielbolivar/.local/share/solana/install/active_release/bin
 fish_add_path $HOME/.cargo/bin
 fish_add_path /usr/local/sbin
