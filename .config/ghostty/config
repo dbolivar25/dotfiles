@@ -1,0 +1,50 @@
+# Window settings
+window-padding-x = 5
+window-padding-y = 5
+window-padding-balance = true
+background-opacity = 1.0
+
+# Theme settings
+theme = rose-pine
+
+# Shell settings
+command = /opt/homebrew/bin/fish
+shell-integration = fish
+shell-integration-features = "no-cursor,sudo,title"
+
+# macOS specific
+macos-option-as-alt = true
+macos-titlebar-style = hidden
+macos-titlebar-proxy-icon = hidden
+# macos-icon = custom-style
+# macos-icon-frame = aluminum
+# macos-icon-ghost-color = #191724
+# macos-icon-screen-color = #e0def4
+
+
+# Scrollback
+scrollback-limit = 10000
+mouse-scroll-multiplier = 3
+
+# Font configuration
+font-family = "JetBrainsMono Nerd Font"
+font-style = "SemiBold"
+font-style-bold = "Bold"
+font-style-italic = "Italic"
+font-style-bold-italic = "Bold Italic"
+font-size = 18
+
+# Cursor
+cursor-style = "block"
+cursor-style-blink = false
+cursor-opacity = 0.25
+
+# Additional recommended Ghostty settings
+clipboard-read = "allow"
+clipboard-write = "allow"
+mouse-hide-while-typing = true
+confirm-close-surface = true
+quit-after-last-window-closed = true
+
+# Performance settings
+window-vsync = true
