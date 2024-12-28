@@ -1018,8 +1018,6 @@ def sw [profile?: string] {
     if ($profile == "-h" or $profile == "--help") {
         print "Usage: sw [profile]"
         print ""
-        print "Without arguments, shows interactive profile picker"
-        print ""
         print "Options:"
         print "  -h, --help     Show this help message"
         print ""
