@@ -1014,189 +1014,105 @@ def fridge [method: string, endpoint: string, ...rest: string] {
     ^xh $method $"http://10.211.55.2:42169($endpoint)" $"authorization:@($env.HOME)/AugmentAI/testing_data/augment_api.txt" ...$rest
 }
 
-def "sw tmux" [session?: string] {
-    let current_session = (do -s { ^tmux display-message -p '#S' } | complete | get stdout | str trim)
-
-    if ($session != null) {
-        sw switch-tmux false $current_session $session
+def sw [profile?: string] {
+    if ($profile == "-h" or $profile == "--help") {
+        print "Usage: sw [profile]"
+        print ""
+        print "Without arguments, shows interactive profile picker"
+        print ""
+        print "Options:"
+        print "  -h, --help     Show this help message"
+        print ""
+        print "Examples:"
+        print "  sw           # Interactive profile picker"
+        print "  sw prod      # Switch directly to 'prod' profile"
         return
     }
 
-    let sessions_data = (sw get-filtered-sessions false $current_session)
-    if ($sessions_data | is-empty) {
-        error make --unspanned {msg: "No other tmux sessions found."}
-        return 1
-    }
-
-    let selected = (sw show-session-picker false $sessions_data)
-    if not ($selected | is-empty) {
-        sw switch-tmux false $current_session $selected
-    } else {
-        error make --unspanned {msg: "No session selected"}
-        return 1
-    }
-}
-
-def "sw tmuxk" [session?: string] {
-    let current_session = (do -s { ^tmux display-message -p '#S' } | complete | get stdout | str trim)
-
-    if ($session != null) {
-        sw switch-tmux true $current_session $session
-        return
-    }
-
-    let sessions_data = (sw get-filtered-sessions true $current_session)
-    if ($sessions_data | is-empty) {
-        error make --unspanned {msg: "No other unattached tmux sessions found."}
-        return 1
-    }
-
-    let selected = (sw show-session-picker true $sessions_data)
-    if not ($selected | is-empty) {
-        sw switch-tmux true $current_session $selected
-    } else {
-        error make --unspanned {msg: "No session selected"}
-        return 1
-    }
-}
-
-def "sw aws" [profile?: string] {
     if ($profile != null) {
-        sw switch-aws-profile $profile
-        return
-    }
-
-    let selected = (sw show-aws-picker)
-    if not ($selected | is-empty) {
-        sw switch-aws-profile $selected
+        sw switch-profile $profile
     } else {
-        error make --unspanned {msg: "No profile selected"}
-        return 1
-    }
-}
-
-def "sw get-filtered-sessions" [kill: bool, current_session: string] {
-    let format_str = '#{session_name}|#{session_attached}|#{session_windows}|#{t:session_created}|#{window_name}'
-    let sessions = (do -s { ^tmux list-sessions -F $format_str } | complete)
-
-    if $sessions.exit_code != 0 {
-        return []
-    }
-
-    $sessions.stdout
-    | lines
-    | parse --regex '^(?P<name>[^|]+)\|(?P<attached>\d+)\|(?P<windows>\d+)\|(?P<created>[^|]+)\|(?P<window>[^|]+)$'
-    | where {|session|
-        if $kill {
-            $session.attached == "0" and $session.name != $current_session
+        let selected = (sw show-picker)
+        if not ($selected | is-empty) {
+            sw switch-profile $selected
         } else {
-            $session.name != $current_session
-        }
-    }
-    | each {|session|
-        {
-            text: ($"($session.name)(char sp)(char sp)[(char sp)($session.windows) win](char sp)(char sp)[($session.window)](char sp)(char sp)($session.created)"),
-            value: $session.name
-        }
-    }
-}
-
-def "sw show-session-picker" [kill: bool, sessions_data: list] {
-    let header = if $kill {
-        "Available Sessions (Select to switch and kill current)"
-    } else {
-        "Available Sessions (Select to switch)"
-    }
-
-    let selected = ($sessions_data
-        | each {|s| $s.text}
-        | str join "\n"
-        | ^fzf --tmux 46% --reverse --ansi $"--header=($header)"
-        | str trim)
-
-    if ($selected | is-empty) {
-        return
-    }
-
-    $sessions_data
-    | where text == $selected
-    | get value.0
-}
-
-def "sw switch-tmux" [kill: bool, current_session: string, target_session: string] {
-    let session_exists = (do -s { ^tmux has-session -t $target_session } | complete).exit_code == 0
-    if not $session_exists {
-        error make --unspanned {msg: $"Session '($target_session)' does not exist."}
-        return 1
-    }
-
-    if $target_session == $current_session {
-        error make --unspanned {msg: $"Already in session ($target_session)"}
-        return 1
-    }
-
-    do -s { ^tmux switch-client -t $target_session }
-    if $kill {
-        do -s { ^tmux kill-session -t $current_session }
-    }
-}
-
-def "sw show-aws-picker" [] {
-    do -s { ^aws configure list-profiles }
-    | complete
-    | get stdout
-    | ^fzf --tmux 40% --reverse --header "AWS Profiles (Select to switch)" --prompt="Switch AWS Profile > "
-}
-
-def "sw switch-aws-profile" [profile: string] {
-    let profiles = (do -s { ^aws configure list-profiles } | complete | get stdout | lines)
-    if not ($profiles | any {|p| $p == $profile }) {
-        error make --unspanned {msg: $"Profile '($profile)' does not exist."}
-        return 1
-    }
-
-    $env.AWS_PROFILE = $profile
-    do -s { ^aws sso login }
-    let region = (do -s { ^aws configure get region } | complete | get stdout | str trim)
-    $env.AWS_REGION = $region
-    $env.AWS_DEFAULT_REGION = $region
-    print $"Switched to ($env.AWS_PROFILE) in region ($env.AWS_REGION)"
-}
-
-def sw [command: string, target?: string] {
-    match $command {
-        "t" | "tmux" => { sw tmux $target }
-        "tk" | "tmuxk" => { sw tmuxk $target }
-        "a" | "aws" => { sw aws $target }
-        "h" | "help" | "--help" => {
-            print "Usage:"
-            print "  sw <COMMAND> [target]"
-            print "Commands:"
-            print "  t,  tmux    - Switch tmux session (keep current)"
-            print "  tk, tmuxk   - Switch tmux session (kill current)"
-            print "  a,  aws     - Switch AWS profile"
-        }
-        _ => {
-            error make --unspanned {msg: "Unknown command. Use 'sw help' for usage information."}
+            error make --unspanned {msg: "No profile selected"}
             return 1
         }
     }
 }
 
-# Command completion
-export extern "tmux" [
-    --help(-h)
-]
+def "sw show-picker" [] {
+    let current_profile = ($env | get -i AWS_PROFILE | default "none")
+    let current_region = ($env | get -i AWS_REGION | default "none")
+    do -s { ^aws configure list-profiles }
+    | complete
+    | get stdout
+    | lines
+    | sort
+    | to text
+    | ^fzf --reverse --header $"Current: ($current_profile) \(($current_region))" --prompt "Select AWS Profile > "
+    | str trim
+}
 
+def "sw switch-profile" [profile: string] {
+    let profiles = (do -s { ^aws configure list-profiles } | complete | get stdout | lines)
+    if not ($profiles | any {|p| $p == $profile }) {
+        error make --unspanned {
+            msg: $"Profile '($profile)' does not exist. Available profiles: ($profiles | str join ', ')"
+        }
+        return 1
+    }
+
+    let old_profile = ($env | get -i AWS_PROFILE)
+    let old_region = ($env | get -i AWS_REGION)
+
+    if $profile == $old_profile {
+        print $"Already using profile ($profile)"
+        return 0
+    }
+
+    # Set new profile
+    $env.AWS_PROFILE = $profile
+
+    # Try SSO login
+    let login_result = (do -s { ^aws sso login })
+    if $login_result.exit_code != 0 {
+        print "SSO login failed. Rolling back to previous profile."
+        $env.AWS_PROFILE = $old_profile
+        $env.AWS_REGION = $old_region
+        return 1
+    }
+
+    # Get and set region
+    let region_result = (do -s { ^aws configure get region })
+    if $region_result.exit_code == 0 {
+        let new_region = ($region_result.stdout | str trim)
+        $env.AWS_REGION = $new_region
+        $env.AWS_DEFAULT_REGION = $new_region
+        print $"✓ Switched to ($env.AWS_PROFILE) in region ($env.AWS_REGION)"
+    } else {
+        print $"Warning: Could not get region for profile ($profile)"
+        print $"✓ Switched to ($env.AWS_PROFILE) (region unchanged)"
+    }
+
+    # Verify credentials
+    let verify_result = (do -s { ^aws sts get-caller-identity })
+    if $verify_result.exit_code != 0 {
+        print "Warning: Could not verify AWS credentials"
+    }
+}
+
+# Command completion
 export extern "aws" [
     --help(-h)
 ]
 
-def rc [] { cd ~/.config/nushell; nvim .; cd - }
-def nrc [] { cd ~/.config/nvim; nvim .; cd - }
-def trc [] { cd ~/.config/alacritty; nvim .; cd - }
-def src [] { cd ~/.ssh; nvim .; cd - }
-def arc [] { cd ~/.aws; nvim .; cd - }
+def rc [] { cd ~/.config/nushell; nvim config.nu; cd - }
+def nrc [] { cd ~/.config/nvim; nvim init.lua; cd - }
+def grc [] { cd ~/.config/ghostty; nvim config; cd - }
+def src [] { cd ~/.ssh; nvim config; cd - }
+def arc [] { cd ~/.aws; nvim config; cd - }
 
 # zoxide integration
 source ~/.config/nushell/zoxide.nu
