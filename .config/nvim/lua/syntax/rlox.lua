@@ -1,7 +1,7 @@
 local function setup_rlox_syntax()
     -- Define colors to match Rust implementation
     local colors = {
-        keyword = "#4B6D85", -- LightBlue
+        keyword = "#43728C", -- LightBlue
         literal = "#EBC181", -- Yellow
         default = "#FFFFFF", -- White
         operator = "#8F8CA8", -- DarkGray
