@@ -12,7 +12,7 @@ local function setup_rlox_syntax()
 
     -- Define keywords
     vim.cmd([[
-        syntax keyword rloxKeyword let fn if else while return and or struct nil
+        syntax keyword rloxKeyword let rec fn if else while return and or struct nil
         syntax keyword rloxBoolean true false
     ]])
 

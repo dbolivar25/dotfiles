@@ -30,6 +30,6 @@ set -gx FZF_DEFAULT_OPTS "
 set -gx BAT_THEME base16
 
 # Other Configuration
-set -gx USER daniel
+set -gx USER danielbolivar
 set -gx VIRTUAL_ENV_DISABLE_PROMPT 1
 set -gx NODE_OPTIONS --max-old-space-size=8192
