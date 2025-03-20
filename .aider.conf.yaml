@@ -1,0 +1,54 @@
+# Core model settings
+model: sonnet
+weak-model: claude-3-5-haiku-20241022 # Use weak model for commit messages
+editor-model: claude-3-7-sonnet-20250219 # Use strong model for editor tasks
+max-chat-history-tokens: 8192 # Reasonable limit before summarization begins
+architect: true # Use architect mode by default
+# editor-edit-format: editor-diff # Best edit format for architect mode
+
+# Convention settings
+read: ~/.config/aider/CONVENTIONS.md # Always load our coding conventions
+
+# Performance and output settings
+stream: true # Enable streaming responses
+pretty: true # Enable colorized output
+show-model-warnings: true # Show warnings about model compatibility
+dark-mode: true # Better colors for dark terminals
+code-theme: monokai # More readable code highlighting
+show-diffs: true # Show diffs when committing changes
+
+# Repository and git settings
+git: true # Enable git integration
+auto-commits: true # Enable automatic commits
+dirty-commits: true # Allow commits when repo is dirty
+gitignore: true # Add .aider* to .gitignore
+attribute-author: true # Show aider as author in git commits
+attribute-commit-message-author: true # Prefix commits with 'aider: ' for clarity
+
+# History and caching
+input-history-file: .aider.input.history
+chat-history-file: .aider.chat.history.md
+cache-prompts: true # Enable prompt caching
+restore-chat-history: true # Restore previous chat context
+llm-history-file: .aider.llm.history # Log LLM conversations for debugging
+
+# Repository mapping
+map-tokens: 2048 # Token budget for repo mapping
+map-refresh: auto # Automatically refresh repo map when needed
+map-multiplier-no-files: 2 # Double tokens when no files specified
+
+# General settings
+verify-ssl: true # Verify SSL certificates
+suggest-shell-commands: true # Enable shell command suggestions
+encoding: utf-8 # Use UTF-8 encoding
+fancy-input: true # Enable input with history and completion
+detect-urls: true # Offer to add URLs to chat
+timeout: 120 # Set reasonable API timeout in seconds
+
+# Testing and linting
+auto-lint: true # Enable automatic linting after changes
+auto-test: false # Disable automatic testing after changes
+
+# Update checking
+check-update: true # Check for updates on launch
+show-release-notes: false # Don't show release notes on updates
