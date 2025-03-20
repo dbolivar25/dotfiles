@@ -19,10 +19,10 @@ macos-titlebar-style = hidden
 macos-titlebar-proxy-icon = hidden
 
 # macOS icon settings
-# macos-icon = custom-style
-# macos-icon-frame = aluminum
-# macos-icon-ghost-color = #191724
-# macos-icon-screen-color = #e0def4
+macos-icon = custom-style
+macos-icon-frame = aluminum
+macos-icon-ghost-color = #191724
+macos-icon-screen-color = #e0def4
 
 # Scrollback
 mouse-scroll-multiplier = 3
@@ -36,9 +36,9 @@ font-style-bold-italic = Bold
 font-size = 18
 
 # Cursor
-cursor-style = block
+# cursor-style = block
 cursor-style-blink = false
-cursor-opacity = 0.25
+cursor-opacity = 1.0
 
 # Quick terminal settings
 quick-terminal-position = center

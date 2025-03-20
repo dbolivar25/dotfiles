@@ -51,7 +51,7 @@ return {
                 sql = { "sqlfluff" },
 
                 -- YAML
-                yaml = { "yamllint" },
+                -- yaml = { "yamllint" },
             },
             linters = {
                 shellcheck = {

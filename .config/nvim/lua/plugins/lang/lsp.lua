@@ -119,6 +119,8 @@ return {
                     },
                 },
 
+                julials = {},
+
                 -- Lua
                 lua_ls = {
                     settings = {
@@ -223,27 +225,27 @@ return {
                 },
 
                 -- YAML
-                yamlls = {
-                    settings = {
-                        yaml = {
-                            schemaStore = {
-                                enable = true,
-                                url = "https://www.schemastore.org/api/json/catalog.json",
-                            },
-                            schemas = {
-                                kubernetes = "*.yaml",
-                                ["http://json.schemastore.org/github-workflow"] = ".github/workflows/*",
-                                ["http://json.schemastore.org/github-action"] = ".github/action.{yml,yaml}",
-                                ["https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json"] = "*docker-compose*.{yml,yaml}",
-                                ["https://raw.githubusercontent.com/instrumenta/kubernetes-json-schema/master/v1.18.0-standalone-strict/all.json"] = "*.k8s.yaml",
-                            },
-                            validate = true,
-                            format = {
-                                enable = true,
-                            },
-                        },
-                    },
-                },
+                -- yamlls = {
+                --     settings = {
+                --         yaml = {
+                --             schemaStore = {
+                --                 enable = true,
+                --                 url = "https://www.schemastore.org/api/json/catalog.json",
+                --             },
+                --             schemas = {
+                --                 kubernetes = "*.yaml",
+                --                 ["http://json.schemastore.org/github-workflow"] = ".github/workflows/*",
+                --                 ["http://json.schemastore.org/github-action"] = ".github/action.{yml,yaml}",
+                --                 ["https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json"] = "*docker-compose*.{yml,yaml}",
+                --                 ["https://raw.githubusercontent.com/instrumenta/kubernetes-json-schema/master/v1.18.0-standalone-strict/all.json"] = "*.k8s.yaml",
+                --             },
+                --             validate = true,
+                --             format = {
+                --                 enable = true,
+                --             },
+                --         },
+                --     },
+                -- },
             },
             setup = {},
         },

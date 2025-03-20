@@ -18,7 +18,7 @@ abbr --add llD 'll -lD'
 abbr --add llf 'll -lf'
 abbr --add llaD 'll -lDa'
 abbr --add llaf 'll -lfa'
-abbr --add lT 'lt --level '
+abbr --add lT 'lt --level'
 
 # Git abbreviations
 abbr --add gg lazygit

@@ -31,10 +31,11 @@ return {
             opts.indent = { enable = true }
             opts.autotag = { enable = true }
 
-            -- Register .rlox filetype
+            -- Register custom filetype
             vim.filetype.add({
                 extension = {
                     rlox = "rlox",
+                    baml = "baml",
                 },
             })
 
@@ -48,6 +49,19 @@ return {
                     -- Load and setup syntax
                     local rlox_syntax = require("syntax.rlox")
                     rlox_syntax.setup()
+                end,
+            })
+
+            -- Set up autocmd for .baml files
+            vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+                pattern = "*.baml",
+                callback = function()
+                    -- Set filetype
+                    vim.opt_local.syntax = "baml"
+
+                    -- Load and setup syntax
+                    local baml_syntax = require("syntax.baml")
+                    baml_syntax.setup()
                 end,
             })
 

@@ -33,3 +33,5 @@ set -gx BAT_THEME base16
 set -gx USER danielbolivar
 set -gx VIRTUAL_ENV_DISABLE_PROMPT 1
 set -gx NODE_OPTIONS --max-old-space-size=8192
+
+set -U nvm_default_version latest
