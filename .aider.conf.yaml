@@ -22,8 +22,8 @@ git: true # Enable git integration
 auto-commits: true # Enable automatic commits
 dirty-commits: true # Allow commits when repo is dirty
 gitignore: true # Add .aider* to .gitignore
-attribute-author: true # Show aider as author in git commits
-attribute-commit-message-author: true # Prefix commits with 'aider: ' for clarity
+attribute-author: false # Show aider as author in git commits
+attribute-commit-message-author: false # Prefix commits with 'aider: ' for clarity
 
 # History and caching
 input-history-file: .aider.input.history
