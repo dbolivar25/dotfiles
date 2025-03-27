@@ -33,7 +33,7 @@ abbr --add gpsh 'git push'
 abbr --add gmr 'git merge'
 
 # Docker abbreviations
-abbr --add lzd lazydocker
+abbr --add dd lazydocker # dd is an existing program but since this is an abbreviation we do not override it in the system
 abbr --add dkr docker
 abbr --add dkrc 'docker compose'
 
