@@ -93,7 +93,7 @@ abbr --add ff fastfetch
 abbr --add man batman
 abbr --add rc 'pushd ~/.config/fish && nvim && popd'
 abbr --add nrc 'pushd ~/.config/nvim && nvim && popd'
-abbr --add trc 'pushd ~/.config/alacritty && nvim && popd'
+abbr --add trc 'pushd ~/.config/ghostty && nvim && popd'
 abbr --add src 'pushd ~/.ssh && nvim && popd'
 abbr --add arc 'pushd ~/.aws && nvim && popd'
 abbr --add cinema asciinema
