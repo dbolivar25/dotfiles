@@ -1,8 +1,6 @@
 # Basic abbreviations
 abbr --add vim nvim
 abbr --add vi nvim
-abbr --add python python3
-abbr --add omp oh-my-posh
 
 # ls abbreviations
 abbr --add l. 'l -a'
