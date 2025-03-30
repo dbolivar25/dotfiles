@@ -16,7 +16,7 @@ local function setup_baml_syntax()
 
     -- Basic keywords (grouped to reduce overhead)
     vim.cmd([[
-        syntax keyword bamlKeyword function class enum test generator retry_policy client prompt template_string import impersonation select as use extends
+        syntax keyword bamlKeyword function class type enum test generator retry_policy client prompt template_string import impersonation select as use extends
     ]])
 
     -- Types (grouped)
@@ -32,6 +32,9 @@ local function setup_baml_syntax()
     -- Special annotations (simplified)
     vim.cmd([[
         syntax match bamlAnnotation "@[a-zA-Z_][a-zA-Z0-9_]*"
+    ]])
+    vim.cmd([[
+        syntax match bamlAnnotation "@@[a-zA-Z_][a-zA-Z0-9_]*"
     ]])
 
     -- Operators and punctuation (combined patterns)
