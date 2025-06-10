@@ -44,7 +44,7 @@ return {
                 pattern = "*.rlox",
                 callback = function()
                     -- Set filetype
-                    vim.opt_local.syntax = "rlox"
+                    vim.opt_local.filetype = "rlox"
 
                     -- Load and setup syntax
                     local rlox_syntax = require("syntax.rlox")

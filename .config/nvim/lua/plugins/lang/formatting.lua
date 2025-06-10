@@ -81,6 +81,9 @@ return {
                 javascriptreact = { "prettier" },
                 typescriptreact = { "prettier" },
 
+                -- Typst
+                typst = { "typstyle" },
+
                 -- YAML
                 yaml = { "prettier" },
 

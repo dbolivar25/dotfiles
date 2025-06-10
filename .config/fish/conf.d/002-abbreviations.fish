@@ -1,6 +1,7 @@
 # Basic abbreviations
 abbr --add vim nvim
 abbr --add vi nvim
+abbr --add zed "zed ."
 
 # ls abbreviations
 abbr --add l. 'l -a'
@@ -86,7 +87,7 @@ abbr --add os openstack
 abbr --add mkd mkdir
 abbr --add x exec
 abbr --add j just
-abbr --add jj "just --justfile ~/.config/just/justfile --working-directory ."
+abbr --add jg "just --justfile ~/.config/just/justfile --working-directory ."
 abbr --add ff fastfetch
 abbr --add man batman
 abbr --add rc 'pushd ~/.config/fish && nvim && popd'
@@ -100,3 +101,5 @@ abbr --add trs 'tmux rename-session'
 abbr --add fenv 'env | rg'
 abbr --add py python3
 abbr --add ipy ipython
+abbr --add cl claude
+abbr --add cld clauded
