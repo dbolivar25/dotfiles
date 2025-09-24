@@ -6,6 +6,8 @@ path=(
     /opt/homebrew/bin
     /usr/local/bin
     /usr/local/sbin
+    $HOME/.claude/local
+    $HOME/.bun/bin
     $HOME/.cargo/bin
     /Users/danielbolivar/.local/share/solana/install/active_release/bin
     /Users/danielbolivar/.avm/bin
@@ -47,3 +49,8 @@ esac
 export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+# bun completions
+[ -s "/Users/danielbolivar/.bun/_bun" ] && source "/Users/danielbolivar/.bun/_bun"
+
+export BUN_INSTALL="$HOME/.bun"
