@@ -19,6 +19,7 @@ return {
                 "json",
                 "yaml",
                 "toml",
+                "prisma",
                 "query",
                 "regex",
                 "markdown",
