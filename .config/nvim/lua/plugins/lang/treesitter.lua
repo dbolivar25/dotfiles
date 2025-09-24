@@ -39,6 +39,18 @@ return {
                 },
             })
 
+            -- Register BAML parser with tree-sitter
+            local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
+            parser_config.baml = {
+                install_info = {
+                    url = "~/Projects/treesitter/tree-sitter-baml",
+                    files = { "src/parser.c", "src/scanner.c" },
+                    generate_requires_npm = false,
+                    requires_generate_from_grammar = false,
+                },
+                filetype = "baml",
+            }
+
             -- Set up autocmd for .rlox files
             vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
                 pattern = "*.rlox",
@@ -52,12 +64,12 @@ return {
                 end,
             })
 
-            -- Set up autocmd for .baml files
+            -- Set up autocmd for .baml files (template highlighting)
             vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
                 pattern = "*.baml",
                 callback = function()
                     -- Set filetype
-                    vim.opt_local.syntax = "baml"
+                    vim.opt_local.filetype = "baml"
 
                     -- Load and setup syntax
                     local baml_syntax = require("syntax.baml")
