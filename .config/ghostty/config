@@ -5,7 +5,7 @@ window-padding-balance = true
 
 # Theme
 theme = Rose Pine
-# custom-shader = ghostty-shaders/starfield.glsl
+# custom-shader = ~/.config/ghostty/shaders/starfield.glsl
 
 # Fix green
 palette = 4=#43728C
