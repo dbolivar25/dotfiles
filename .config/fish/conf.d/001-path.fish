@@ -13,6 +13,9 @@ fish_add_path /Users/danielbolivar/.local/share/solana/install/active_release/bi
 fish_add_path $HOME/.cargo/bin
 fish_add_path /usr/local/sbin
 fish_add_path /usr/local/bin
+fish_add_path $BUN_INSTALL/bin
+fish_add_path $PNPM_HOME
+fish_add_path $HOME/.claude/local
 fish_add_path /opt/homebrew/bin
 fish_add_path $HOME/.npm-global/bin
 fish_add_path $HOME/.local/bin

@@ -35,3 +35,17 @@ set -gx VIRTUAL_ENV_DISABLE_PROMPT 1
 set -gx NODE_OPTIONS --max-old-space-size=8192
 
 set -U nvm_default_version latest
+
+set -gx ABSOLUTE_PATH_TO_MEETINGFLOW_REPO $HOME/AugmentAI/meetingflow
+
+set -gx PNPM_HOME $HOME/Library/pnpm
+
+set -gx BUN_INSTALL $HOME/.bun
+
+# BEGIN opam configuration
+# This is useful if you're using opam as it adds:
+#   - the correct directories to the PATH
+#   - auto-completion for the opam binary
+# This section can be safely removed at any time if needed.
+test -r '/Users/danielbolivar/.opam/opam-init/init.fish' && source '/Users/danielbolivar/.opam/opam-init/init.fish' >/dev/null 2>/dev/null; or true
+# END opam configuration
