@@ -1,1 +1,3 @@
-export PATH="$PATH:/users/danielbolivar/.local/bin"
+export PATH="$PATH:/Users/danielbolivar/.local/bin"
+
+alias claude='~/.claude/local/claude'
