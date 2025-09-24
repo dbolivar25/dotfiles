@@ -76,7 +76,5 @@ function M.setup()
     })
 end
 
--- Legacy compatibility
-M.setup_rlox_syntax = M.setup
-
 return M
+
