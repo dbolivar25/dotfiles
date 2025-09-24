@@ -1,112 +1,90 @@
-local function setup_baml_syntax()
-    -- Define colors to match your theme style
-    local colors = {
-        keyword = "#43728C", -- Light blue for keywords
-        literal = "#E4BC7E", -- Yellow for literals/strings
-        default = "#FFFFFF", -- White for default text
-        operator = "#8F8CA8", -- Dark gray for operators/punctuation
-        type = "#A7CED7", -- Light green for types
-        func = "#8F8CA8", -- Dark gray for functions
-        comment = "#8F8CA8", -- Dark gray for comments
-        docstring = "#A3A1BC", -- Lighter gray for docstrings
-    }
+-- BAML Template Interpolation Highlighter
+local M = {}
 
-    -- Clear any existing syntax rules
-    vim.cmd([[syntax clear]])
+function M.setup()
+    local ns = vim.api.nvim_create_namespace("baml_template")
 
-    -- Basic keywords (grouped to reduce overhead)
-    vim.cmd([[
-        syntax keyword bamlKeyword function class type enum test generator retry_policy client prompt template_string import impersonation select as use extends
-    ]])
+    -- Link to Comment for same gray as other punctuation
+    vim.api.nvim_set_hl(0, "BamlTemplateDelimiter", { link = "Comment" })
+    -- Clear highlighting for content (use default/normal text color)
+    vim.api.nvim_set_hl(0, "BamlTemplateContent", {})
 
-    -- Types (grouped)
-    vim.cmd([[
-        syntax keyword bamlType string number boolean array object image integer float int64 int32 float64 float32
-    ]])
+    local function apply_highlights()
+        local bufnr = vim.api.nvim_get_current_buf()
+        vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
 
-    -- Booleans
-    vim.cmd([[
-        syntax keyword bamlBoolean true false
-    ]])
+        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
-    -- Special annotations (simplified)
-    vim.cmd([[
-        syntax match bamlAnnotation "@[a-zA-Z_][a-zA-Z0-9_]*"
-    ]])
-    vim.cmd([[
-        syntax match bamlAnnotation "@@[a-zA-Z_][a-zA-Z0-9_]*"
-    ]])
+        for row, line in ipairs(lines) do
+            row = row - 1
 
-    -- Operators and punctuation (combined patterns)
-    vim.cmd([[
-        syntax match bamlOperator "[+\-*/<>=!{}\[\](),;%|]"
-        syntax match bamlOperator "->\\|==\\|!=\\|>=\\|<="
-    ]])
+            -- Pattern to match template interpolations
+            local patterns = {
+                { open = "{{", close = "}}" },
+                { open = "{%", close = "%}" },
+            }
 
-    -- Numbers and strings (optimized)
-    vim.cmd([[syntax match bamlNumber "\<\d\+\(\.\d\+\)\?\>"]])
-    vim.cmd([[syntax region bamlString start=/"/ skip=/\\"/ end=/"/ contains=bamlStringEscape]])
-    vim.cmd([[syntax match bamlStringEscape "\\." contained]])
+            for _, pattern in ipairs(patterns) do
+                local pos = 1
+                while true do
+                    -- Find opening delimiter
+                    local start_pos = line:find(pattern.open, pos, true)
+                    if not start_pos then
+                        break
+                    end
 
-    -- Multiline strings with template syntax
-    vim.cmd([[
-        syntax region bamlMultilineString start=/#"/ end=/"#/ contains=bamlMultilineVariable,bamlMultilineTag
+                    -- Find closing delimiter
+                    local end_pos = line:find(pattern.close, start_pos + #pattern.open, true)
+                    if not end_pos then
+                        -- Just highlight the opening delimiter if no closing found
+                        vim.api.nvim_buf_set_extmark(bufnr, ns, row, start_pos - 1, {
+                            end_col = start_pos - 1 + #pattern.open,
+                            hl_group = "BamlTemplateDelimiter",
+                            priority = 1000,
+                        })
+                        break
+                    end
 
-        syntax region bamlMultilineVariable matchgroup=bamlMultilineVariableBraces start=/{{/ end=/}}/ contained
-        syntax region bamlMultilineTag matchgroup=bamlMultilineTagBraces start=/{%/ end=/%}/ contained
-    ]])
+                    -- Highlight opening delimiter
+                    vim.api.nvim_buf_set_extmark(bufnr, ns, row, start_pos - 1, {
+                        end_col = start_pos - 1 + #pattern.open,
+                        hl_group = "BamlTemplateDelimiter",
+                        priority = 1000,
+                    })
 
-    -- Comments (combined into fewer rules)
-    vim.cmd([[
-        syntax match bamlComment "//[^/].*$"
-        syntax match bamlDocstring "///.*$"
-        syntax region bamlBlockComment start="/\*" end="\*/"
-    ]])
+                    -- Override content between delimiters to use default color
+                    if end_pos > start_pos + #pattern.open then
+                        vim.api.nvim_buf_set_extmark(bufnr, ns, row, start_pos - 1 + #pattern.open, {
+                            end_col = end_pos - 1,
+                            hl_group = "Normal",
+                            priority = 900,
+                            hl_mode = "replace",
+                        })
+                    end
 
-    -- Template variables (combined into fewer patterns)
-    vim.cmd([[
-        syntax match bamlEnvVariable /\<env\.[a-zA-Z0-9_]*\>/
-        syntax match bamlContextVariable /\<ctx\.[a-zA-Z0-9_]*\>/
-    ]])
+                    -- Highlight closing delimiter
+                    vim.api.nvim_buf_set_extmark(bufnr, ns, row, end_pos - 1, {
+                        end_col = end_pos - 1 + #pattern.close,
+                        hl_group = "BamlTemplateDelimiter",
+                        priority = 1000,
+                    })
 
-    -- Set up highlighting
-    local function hi(group, opts)
-        vim.api.nvim_set_hl(0, group, opts)
+                    -- Move position forward
+                    pos = end_pos + #pattern.close
+                end
+            end
+        end
     end
 
-    -- Apply highlighting (organized for clarity)
-    -- Keywords and types
-    hi("bamlKeyword", { fg = colors.keyword })
-    hi("bamlType", { fg = colors.type })
-    hi("bamlBoolean", { fg = colors.literal })
+    -- Apply once
+    apply_highlights()
 
-    -- Operators
-    hi("bamlOperator", { fg = colors.operator })
-
-    -- Strings
-    hi("bamlString", { fg = colors.literal })
-    hi("bamlMultilineString", { fg = colors.literal })
-    hi("bamlStringEscape", { fg = colors.literal })
-
-    -- Template syntax
-    hi("bamlMultilineVariableBraces", { fg = colors.func })
-    hi("bamlMultilineTagBraces", { fg = colors.func })
-
-    -- Numbers
-    hi("bamlNumber", { fg = colors.literal })
-
-    -- Comments
-    hi("bamlComment", { fg = colors.comment })
-    hi("bamlDocstring", { fg = colors.docstring })
-    hi("bamlBlockComment", { fg = colors.comment })
-
-    -- Special syntax
-    hi("bamlAnnotation", { fg = colors.func })
-    hi("bamlDecorator", { fg = colors.func })
-    hi("bamlEnvVariable", { fg = colors.literal })
-    hi("bamlContextVariable", { fg = colors.literal })
+    -- Reapply on changes
+    vim.api.nvim_create_autocmd({ "TextChanged", "InsertLeave" }, {
+        buffer = 0,
+        callback = apply_highlights,
+    })
 end
 
-return {
-    setup = setup_baml_syntax,
-}
+return M
+
