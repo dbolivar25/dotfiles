@@ -14,7 +14,7 @@ return {
         dependencies = {
             { "folke/neoconf.nvim", cmd = "Neoconf", config = false },
             "mason.nvim",
-            "williamboman/mason-lspconfig.nvim",
+            "mason-org/mason-lspconfig.nvim",
         },
         opts = {
             diagnostics = {
@@ -98,13 +98,13 @@ return {
                 golangci_lint_ls = {},
 
                 -- Haskell
-                hls = {
-                    settings = {
-                        haskell = {
-                            formattingProvider = "fourmolu",
-                        },
-                    },
-                },
+                -- hls = {
+                --     settings = {
+                --         haskell = {
+                --             formattingProvider = "fourmolu",
+                --         },
+                --     },
+                -- },
 
                 -- Helm
                 helm_ls = {},
