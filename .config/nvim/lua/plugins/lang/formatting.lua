@@ -76,10 +76,10 @@ return {
                 toml = { "taplo" },
 
                 -- TypeScript/JavaScript
-                typescript = { "prettier" },
-                javascript = { "prettier" },
-                javascriptreact = { "prettier" },
-                typescriptreact = { "prettier" },
+                typescript = { "biome" },
+                javascript = { "biome" },
+                javascriptreact = { "biome" },
+                typescriptreact = { "biome" },
 
                 -- Typst
                 typst = { "typstyle" },
