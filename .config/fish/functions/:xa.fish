@@ -1,0 +1,3 @@
+function :xa
+    exit
+end

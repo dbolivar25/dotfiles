@@ -1,8 +1,8 @@
 # PATH exports
 typeset -U path PATH
 path=(
-    $HOME/.npm-global/bin
     $HOME/.local/bin
+    $HOME/.npm-global/bin
     /opt/homebrew/bin
     /usr/local/bin
     /usr/local/sbin
