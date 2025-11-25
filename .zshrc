@@ -54,3 +54,18 @@ export NVM_DIR="$HOME/.config/nvm"
 [ -s "/Users/danielbolivar/.bun/_bun" ] && source "/Users/danielbolivar/.bun/_bun"
 
 export BUN_INSTALL="$HOME/.bun"
+# mise activation
+if command -v mise &> /dev/null; then
+    eval "$(mise activate zsh --shims)"
+    eval "$(mise activate zsh)"
+elif [ -f ~/.local/bin/mise ]; then
+    export PATH="$HOME/.local/bin:$PATH"
+    eval "$(~/.local/bin/mise activate zsh --shims)"
+    eval "$(~/.local/bin/mise activate zsh)"
+fi
+
+# opencode
+export PATH=/Users/danielbolivar/.opencode/bin:$PATH
+
+# Added by Antigravity
+export PATH="/Users/danielbolivar/.antigravity/antigravity/bin:$PATH"
