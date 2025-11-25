@@ -29,6 +29,9 @@ set -gx FZF_DEFAULT_OPTS "
 # Bat Configuration
 set -gx BAT_THEME base16
 
+# Direnv Configuration
+set -gx DIRENV_LOG_FORMAT ""
+
 # Other Configuration
 set -gx USER danielbolivar
 set -gx VIRTUAL_ENV_DISABLE_PROMPT 1

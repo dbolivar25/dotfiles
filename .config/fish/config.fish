@@ -4,4 +4,7 @@ if status is-interactive
 
     # zoxide
     zoxide init fish --cmd cd | source
+
+    # direnv
+    direnv hook fish | source
 end
