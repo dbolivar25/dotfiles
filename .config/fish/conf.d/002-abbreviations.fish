@@ -103,3 +103,4 @@ abbr --add py python3
 abbr --add ipy ipython
 abbr --add cl claude
 abbr --add cld clauded
+abbr --add oc opencode
