@@ -4,4 +4,4 @@ customCommands:
     command: "quill --yes"
     description: "Commit with AI-generated message"
     output: log
-    loadingText: "Generating commit message..."
+    loadingText: "Committing..."
