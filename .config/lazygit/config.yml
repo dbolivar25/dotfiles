@@ -1,0 +1,7 @@
+customCommands:
+  - key: "C"
+    context: "files"
+    command: "quill --yes"
+    description: "Commit with AI-generated message"
+    output: log
+    loadingText: "Generating commit message..."
