@@ -69,3 +69,6 @@ export PATH=/Users/danielbolivar/.opencode/bin:$PATH
 
 # Added by Antigravity
 export PATH="/Users/danielbolivar/.antigravity/antigravity/bin:$PATH"
+
+# Amp CLI
+export PATH="/Users/danielbolivar/.amp/bin:$PATH"

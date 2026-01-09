@@ -30,8 +30,10 @@ return {
             inlay_hints = {
                 enabled = false,
             },
-            capabilities = {},
             servers = {
+                ["*"] = {
+                    capabilities = {},
+                },
                 -- Ansible
                 ansiblels = {},
 
