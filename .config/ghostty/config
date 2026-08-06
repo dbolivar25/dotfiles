@@ -1,4 +1,4 @@
-auto-update-channel = tip
+auto-update-channel = stable
 
 # Window settings
 window-padding-x = 10
@@ -6,7 +6,8 @@ window-padding-y = 10
 window-padding-balance = true
 
 # Theme
-theme = Rose Pine
+theme = Rose Pine Dawn
+config-file = ?theme.local
 custom-shader = ~/.config/ghostty/shaders/cursor-blaze.glsl
 
 # Fix green
@@ -57,6 +58,8 @@ selection-background = #e0def2
 
 mouse-hide-while-typing = true
 focus-follows-mouse = true
+
+window-save-state = never
 
 # quit-after-last-window-closed = true
 unfocused-split-opacity = 1.0

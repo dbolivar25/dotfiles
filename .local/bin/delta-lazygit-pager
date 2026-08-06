@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+mode_file="${GHOSTTY_THEME_MODE_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/ghostty/theme-mode}"
+delta_args=(--paging=never)
+
+if [[ -r "$mode_file" ]]; then
+  mode="$(<"$mode_file")"
+
+  case "$mode" in
+    light)
+      delta_args+=(--light)
+      ;;
+    dark)
+      delta_args+=(--dark)
+      ;;
+  esac
+fi
+
+exec delta "${delta_args[@]}" "$@"

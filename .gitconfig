@@ -9,14 +9,16 @@
 
 [core]
     pager = delta
+	excludesfile = /Users/danielbolivar/.gitignore_global
 
 [interactive]
     diffFilter = delta --color-only --features=interactive
 
 [delta]
   features = decorations
+  detect-dark-light = true
   line-numbers = true
-  syntax-theme = base16
+  syntax-theme = ansi
   true-color = always
 
 [delta "interactive"]

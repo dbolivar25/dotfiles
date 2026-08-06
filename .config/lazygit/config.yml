@@ -1,3 +1,7 @@
+git:
+  diffRenderers:
+    - colorArg: always
+      command: delta-lazygit-pager
 customCommands:
   - key: "C"
     context: "files"

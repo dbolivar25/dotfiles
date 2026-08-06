@@ -1,0 +1,7 @@
+theme = "rose-pine-dawn"
+mode = "auto"
+line_numbers = true
+wrap_lines = false
+hunk_headers = true
+exclude_untracked = false
+
