@@ -64,6 +64,11 @@ elif [ -f ~/.local/bin/mise ]; then
     eval "$(~/.local/bin/mise activate zsh)"
 fi
 
+# rbenv should run after PATH mutations in this file
+if command -v rbenv >/dev/null 2>&1; then
+  eval "$(rbenv init - zsh)"
+fi
+
 # opencode
 export PATH=/Users/danielbolivar/.opencode/bin:$PATH
 
@@ -72,3 +77,12 @@ export PATH="/Users/danielbolivar/.antigravity/antigravity/bin:$PATH"
 
 # Amp CLI
 export PATH="/Users/danielbolivar/.amp/bin:$PATH"
+
+if [[ -o interactive && -n "$SSH_CONNECTION" && -x /opt/homebrew/bin/fish ]]; then
+  exec /opt/homebrew/bin/fish -l
+fi
+
+export PATH=$PATH:/Users/danielbolivar/.spicetify
+
+# Machine-local secrets are kept outside Git.
+[[ -f ~/dotfiles/secrets.zsh ]] && source ~/dotfiles/secrets.zsh

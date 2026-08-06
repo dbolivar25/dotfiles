@@ -1,2 +1,4 @@
 secrets.*
 history.*
+.config/ghostty/theme.local
+.config/ghostty/theme-mode

@@ -1,7 +1,6 @@
 # Basic abbreviations
 abbr --add vim nvim
 abbr --add vi nvim
-abbr --add zed "zed ."
 
 # ls abbreviations
 abbr --add l. 'l -a'
@@ -104,3 +103,5 @@ abbr --add ipy ipython
 abbr --add cl claude
 abbr --add cld clauded
 abbr --add oc opencode
+abbr --add hd herdr
+abbr --add pa prime-agent
