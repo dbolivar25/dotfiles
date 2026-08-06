@@ -69,6 +69,9 @@ if command -v rbenv >/dev/null 2>&1; then
   eval "$(rbenv init - zsh)"
 fi
 
+# Keep the Zsh prompt consistent with the native Fish and Nushell prompts.
+eval "$(starship init zsh)"
+
 # opencode
 export PATH=/Users/danielbolivar/.opencode/bin:$PATH
 

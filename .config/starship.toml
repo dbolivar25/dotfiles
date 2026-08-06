@@ -1,0 +1,29 @@
+add_newline = false
+format = "$directory$git_branch${custom.git_dirty}$python\n$character"
+
+[directory]
+format = "[$path]($style) "
+style = "blue"
+truncation_length = 0
+truncate_to_repo = false
+
+[git_branch]
+format = "[$branch]($style)"
+style = "bright-black"
+symbol = ""
+
+[custom.git_dirty]
+command = "printf '*'"
+when = "test -n \"$(git status --porcelain 2>/dev/null)\""
+format = "[$output]($style) "
+style = "bright-black"
+
+[python]
+format = "[${virtualenv}]($style) "
+style = "bright-black"
+symbol = ""
+
+[character]
+success_symbol = "[❯](purple)"
+error_symbol = "[❯](red)"
+vimcmd_symbol = "[❮](purple)"
