@@ -4,7 +4,7 @@ return {
 		name = "rose-pine",
 		priority = 1000,
 		opts = {
-			variant = "main",
+			variant = "auto",
 			dark_variant = "main",
 			dim_inactive_windows = true,
 			styles = {
@@ -20,4 +20,6 @@ return {
 			colorscheme = "rose-pine",
 		},
 	},
+	{ "folke/tokyonight.nvim", enabled = false },
+	{ "catppuccin/nvim", enabled = false },
 }
