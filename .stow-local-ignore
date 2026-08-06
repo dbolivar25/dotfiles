@@ -3,6 +3,9 @@
 \.gitignore
 \.stow-local-ignore
 README.*
+^tools
+^tests
+^\.ruff_cache
 
 # Machine-local state and credentials
 (^|/)secrets\..*

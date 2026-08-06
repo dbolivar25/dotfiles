@@ -1,0 +1,19 @@
+# Highest precedence first. Missing directories are skipped by shell adapters.
+${HOME}/.local/bin
+${HOME}/.amp/bin
+${HOME}/.opencode/bin
+${HOME}/.antigravity/antigravity/bin
+${HOME}/Library/pnpm
+${HOME}/.bun/bin
+${HOME}/.avm/bin
+${HOME}/.local/share/solana/install/active_release/bin
+${HOME}/.cargo/bin
+${HOME}/.ghcup/bin
+${HOME}/.modular/bin
+/Library/TeX/texbin
+/opt/homebrew/opt/ruby/bin
+${HOME}/.dotnet/tools
+/usr/local/share/dotnet
+/usr/local/go/bin
+/usr/local/bin
+/opt/homebrew/bin

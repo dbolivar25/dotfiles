@@ -3,3 +3,8 @@ history.*
 .config/ghostty/theme.local
 .config/ghostty/theme-mode
 .config/fish/fish_variables
+.config/shell/secrets.d/
+tools/**/.venv/
+tools/**/__pycache__/
+tools/**/*.pyc
+.ruff_cache/

@@ -92,52 +92,5 @@ $env.NU_PLUGIN_DIRS = [
     ($nu.default-config-dir | path join 'plugins') # add <nushell-config-dir>/plugins
 ]
 
-# Environment variables
-$env.EDITOR = "nvim"
-$env.VISUAL = "nvim"
-
-# Config directory
-$env.XDG_CONFIG_HOME = ($env.HOME | path join ".config")
-
-# Ruby exports
-$env.LDFLAGS = "-L/opt/homebrew/opt/ruby/lib"
-$env.CPPFLAGS = "-I/opt/homebrew/opt/ruby/include"
-
-# Key and Token exports
-source ~/.config/nushell/secrets.nu
-
-# FZF Configuration
-$env.FZF_DEFAULT_OPTS = "
-        --tmux 70%
-        --color=fg:#908caa,bg:#191724,hl:#ebbcba
-        --color=fg+:#e0def4,bg+:#26233a,hl+:#ebbcba
-        --color=border:#403d52,header:#31748f,gutter:#191724
-        --color=spinner:#f6c177,info:#9ccfd8
-        --color=pointer:#c4a7e7,marker:#eb6f92,prompt:#908caa"
-
-# Bat Configuration
-$env.BAT_THEME = "base16"
-
-# Other Configuration
-$env.USER = "daniel"
-$env.VIRTUAL_ENV_DISABLE_PROMPT = 1
-$env.NODE_OPTIONS = "--max-old-space-size=8192"
-
-# Path configuration
-$env.PATH = ($env.PATH | split row (char esep))
-
-path add ($env.HOME | path join ".local" "bin")
-path add "/opt/homebrew/bin"
-path add "/usr/local/sbin"
-path add ($env.HOME | path join ".cargo" "bin")
-path add ($env.HOME | path join ".ghcup" "bin")
-path add ($env.HOME | path join ".cabal" "bin")
-path add ($env.HOME | path join ".modular" "bin")
-path add "/Library/TeX/texbin"
-path add "/opt/homebrew/opt/ruby/bin"
-path add ($env.HOME | path join ".dotnet" "tools")
-path add "/usr/local/share/dotnet"
-
-$env.PATH = ($env.PATH | uniq)
-
-zoxide init nushell --cmd cd | save ~/.config/nushell/zoxide.nu --force
+# Shared environment and behavior contracts.
+source ~/.config/shell/adapters/nu.nu

@@ -1,0 +1,6 @@
+# Commands expected to resolve in Fish, Zsh, and Nushell.
+amp
+git
+nvim
+ruby
+uv
