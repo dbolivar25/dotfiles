@@ -1,0 +1,21 @@
+onboarding = false
+[ui]
+agent_panel_sort = "spaces"
+
+[theme]
+name = "rose-pine-dawn"
+auto_switch = false
+dark_name = "rose-pine"
+light_name = "rose-pine-dawn"
+
+[terminal]
+default_shell = "/opt/homebrew/bin/fish"
+
+[keys]
+prefix = "cmd+b"
+
+[[keys.command]]
+key = "prefix+l"
+type = "plugin_action"
+command = "meetingflow.layout.apply"
+description = "apply MeetingFlow layout"
