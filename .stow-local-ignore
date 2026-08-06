@@ -1,0 +1,9 @@
+# Version-control and repository documentation
+\.git
+\.gitignore
+\.stow-local-ignore
+README.*
+
+# Machine-local state and credentials
+(^|/)secrets\..*
+(^|/)history\..*

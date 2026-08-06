@@ -8,13 +8,15 @@ turning the home directory into a Git repository.
 
 ```sh
 brew install stow
-stow --restow --dir="$HOME" --target="$HOME" dotfiles
+cd "$HOME/dotfiles"
+stow --restow --target="$HOME" .
 ```
 
 Preview link changes before applying them:
 
 ```sh
-stow --simulate --verbose=2 --restow --dir="$HOME" --target="$HOME" dotfiles
+cd "$HOME/dotfiles"
+stow --simulate --verbose=2 --restow --target="$HOME" .
 ```
 
 ## Update workflow
