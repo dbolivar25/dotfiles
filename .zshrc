@@ -82,7 +82,5 @@ if [[ -o interactive && -n "$SSH_CONNECTION" && -x /opt/homebrew/bin/fish ]]; th
   exec /opt/homebrew/bin/fish -l
 fi
 
-export PATH=$PATH:/Users/danielbolivar/.spicetify
-
 # Machine-local secrets are kept outside Git.
 [[ -f ~/dotfiles/secrets.zsh ]] && source ~/dotfiles/secrets.zsh

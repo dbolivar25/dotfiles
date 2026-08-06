@@ -2,3 +2,4 @@ secrets.*
 history.*
 .config/ghostty/theme.local
 .config/ghostty/theme-mode
+.config/fish/fish_variables
