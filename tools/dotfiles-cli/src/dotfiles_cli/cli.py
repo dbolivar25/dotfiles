@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from .core import (
+    SHELL_ADAPTERS,
     SHELLS,
     Context,
     DotfilesError,
@@ -207,8 +208,7 @@ def _integration_init(
     plan = Plan(f"Initialize integration {name}")
     for shell in SHELLS:
         if shell in requested:
-            extension = {"fish": "fish.fish", "zsh": "zsh.zsh", "nu": "nu.nu"}[shell]
-            target = directory / extension
+            target = directory / SHELL_ADAPTERS[shell]
             plan.add("write", target, f"scaffold {shell} adapter")
             if apply:
                 atomic_write(target, _integration_template(name, shell))

@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import json
 import stat
+import subprocess
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -10,7 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from dotfiles_cli.cli import main
-from dotfiles_cli.core import Context
+from dotfiles_cli.core import SHELLS, Context, adapter_command, clean_shell_environment
 from dotfiles_cli.doctor import run_doctor
 from dotfiles_cli.runtime import (
     _probe_shell,
@@ -42,6 +43,7 @@ class CliTest(unittest.TestCase):
         (shell_root / "integrations").mkdir()
         (self.repo / ".config" / "nushell").mkdir()
         (shell_root / "behavior" / "editor").mkdir(parents=True)
+        (shell_root / "adapters" / "bash.bash").write_text("# Bash adapter\n")
         (shell_root / "adapters" / "fish.fish").write_text("# Fish adapter\n")
         (shell_root / "adapters" / "zsh.zsh").write_text("# Zsh adapter\n")
         (shell_root / "adapters" / "nu.nu").write_text("# Nushell adapter\n")
@@ -118,6 +120,7 @@ class CliTest(unittest.TestCase):
         status, _ = self.run_cli("integration", "init", "example", "--apply")
         self.assertEqual(status, 0)
         integration = self.repo / ".config" / "shell" / "integrations" / "example"
+        self.assertTrue((integration / "bash.bash").is_file())
         self.assertTrue((integration / "fish.fish").is_file())
         self.assertTrue((integration / "zsh.zsh").is_file())
         self.assertTrue((integration / "nu.nu").is_file())
@@ -159,6 +162,8 @@ class CliTest(unittest.TestCase):
         ownership = load_runtime_ownership(
             self.repo / ".config" / "shell" / "runtime-ownership.toml"
         )
+        self.assertEqual(ownership.shells, ("bash", "fish", "zsh", "nu"))
+        self.assertEqual(SHELLS, ownership.shells)
         declarations = {runtime.name: runtime for runtime in ownership.runtimes}
         self.assertEqual(
             set(declarations),
@@ -279,6 +284,7 @@ class CliTest(unittest.TestCase):
     def test_runtime_conflicts_are_data_not_command_failures(self) -> None:
         home = str(Path.home())
         observations = {
+            "bash": f"{home}/.nvm/versions/node/v24/bin/node",
             "fish": f"{home}/.nvm/versions/node/v24/bin/node",
             "zsh": "/opt/homebrew/bin/node",
             "nu": f"{home}/.local/share/mise/installs/node/24/bin/node",
@@ -356,8 +362,10 @@ class CliTest(unittest.TestCase):
         ) as run:
             collect_runtime_report(Context.discover(str(self.repo)))
         executables = [invocation.args[0][0] for invocation in run.call_args_list]
-        self.assertEqual(executables, ["fish", "zsh", "nu"])
-        nu_arguments = run.call_args_list[2].args[0]
+        self.assertEqual(executables, ["/bin/bash", "fish", "zsh", "nu"])
+        bash_arguments = run.call_args_list[0].args[0]
+        self.assertIn('resolved=$(type -P "$name"', bash_arguments[-1])
+        nu_arguments = run.call_args_list[3].args[0]
         self.assertIn("--env-config", nu_arguments)
         self.assertIn("--config", nu_arguments)
         inspected = {
@@ -371,6 +379,39 @@ class CliTest(unittest.TestCase):
             "rustc",
         }
         self.assertFalse(inspected.intersection(executables))
+
+    def test_bash_adapter_deduplicates_paths_in_managed_order(self) -> None:
+        shell_root = self.repo / ".config" / "shell"
+        first = self.repo / "managed one"
+        second = self.repo / "managed-two"
+        inherited = self.repo / "inherited"
+        for directory in (first, second, inherited):
+            directory.mkdir()
+        (shell_root / "paths").write_text(f"{first}\n{second}\n")
+        source = (
+            Path(__file__).parents[3] / ".config" / "shell" / "adapters" / "bash.bash"
+        )
+        (shell_root / "adapters" / "bash.bash").write_text(source.read_text())
+        context = Context.discover(str(self.repo))
+        environment = clean_shell_environment(context)
+        environment["HOME"] = str(self.repo)
+        environment["PATH"] = f"{second}:{inherited}:{inherited}"
+        result = subprocess.run(
+            adapter_command(
+                context,
+                "bash",
+                'IFS=: read -r -a values <<< "$PATH"; printf \'%s\\0\' "${values[@]}"',
+            ),
+            cwd=self.repo,
+            env=environment,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        self.assertEqual(
+            result.stdout.decode().split("\0")[:-1],
+            [str(first), str(second), str(inherited)],
+        )
 
     def test_nu_runtime_probe_uses_disposable_cache(self) -> None:
         completed = __import__("subprocess").CompletedProcess(

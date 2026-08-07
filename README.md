@@ -20,9 +20,9 @@ run immediately.
 
 ## Shared shell configuration
 
-Zsh remains the login shell, Fish is the primary interactive shell, and
-Nushell remains a native secondary shell. They share data and behavior
-contracts without sharing shell syntax:
+Zsh remains the login shell, Fish is the primary interactive shell, Bash is a
+compatible fallback, and Nushell remains a native secondary shell. They share
+data and behavior contracts without sharing shell syntax:
 
 ```text
 .config/shell/
@@ -33,12 +33,14 @@ contracts without sharing shell syntax:
 ├── behavior/             # Cross-shell behavior contracts
 ├── runtime-ownership.toml # Runtime ownership intent and migration gates
 ├── integrations/         # Tool-local shell adapters and support markers
-└── adapters/             # Fish, Zsh, and Nushell loaders
+└── adapters/             # Bash, Fish, Zsh, and Nushell loaders
 ```
 
-Fish and Nushell retain their native prompts; Zsh uses Starship. Editor
-selection is shared behavior: `nvim` locally and `vim` over SSH in all three
-shells.
+Fish and Nushell retain their native prompts; Bash and Zsh use Starship. Editor
+selection is shared behavior: `nvim` locally and `vim` over SSH in all four
+shells. Interactive Bash loads the shared adapter through `.bashrc`; login Bash
+uses `.bash_profile` to load the portable `.profile` boundary first. Scripts
+should use `mise exec` instead of relying on interactive startup hooks.
 
 ## Common operations
 
@@ -87,9 +89,10 @@ current owners and remaining retirement gates:
 - uv owns project-selected Python interpreters; global `python` and `python3`
   stay outside the runtime inventory. Project-declared uv minimums remain
   compatibility gates.
-- rustup and OPAM retain specialist ownership. OPAM activates natively in Fish
-  and Zsh; Nushell uses `opam exec -- <command>` because OPAM has no native Nu
-  hook. The installed direnv supports Fish and Zsh, but not Nushell.
+- rustup and OPAM retain specialist ownership. OPAM activates natively in Bash,
+  Fish, and Zsh; Nushell uses `opam exec -- <command>` because OPAM has no
+  native Nu hook. The installed direnv supports Bash, Fish, and Zsh, but not
+  Nushell.
 - GHCup, Bun, and the Microsoft .NET installation remain specialist owners for
   their existing runtimes.
 - Elixir is retained and is not a pruning candidate. Mise ownership of Elixir
@@ -111,7 +114,7 @@ shadowing, and unresolved migration gates. Existing conflicts are warnings and
 data: this command does not claim ownership is consolidated, enable mise,
 install versions, edit projects, or remove legacy managers. Those changes come
 only after the required versions and representative projects pass parity checks
-in Fish, Zsh, and Nushell.
+in Bash, Fish, Zsh, and Nushell.
 
 `runtime configure` renders `.config/mise/config.toml` only from explicitly
 approved ownership declarations. The current global defaults cover Node `lts`,
@@ -140,7 +143,8 @@ the shared model instead of retaining inline blocks:
 - Initialization hook: `dotfiles integration init`
 
 An integration must have an adapter or an explicit `native`, `unsupported`, or
-`deferred` marker for Fish, Zsh, and Nushell.
+`deferred` marker for Bash, Fish, Zsh, and Nushell. Bash adapters must remain
+compatible with the macOS-provided Bash 3.2.
 
 ## Development
 

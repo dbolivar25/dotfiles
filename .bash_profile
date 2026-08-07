@@ -1,0 +1,5 @@
+[ -r "$HOME/.profile" ] && . "$HOME/.profile"
+
+case $- in
+  *i*) [ -r "$HOME/.bashrc" ] && . "$HOME/.bashrc" ;;
+esac

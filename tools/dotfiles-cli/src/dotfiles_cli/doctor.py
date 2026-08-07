@@ -75,7 +75,10 @@ def _environment_values(
 ) -> list[str] | None:
     if not keys:
         return []
-    if shell == "zsh":
+    if shell == "bash":
+        joined = " ".join(keys)
+        body = f"for key in {joined}; do printf '%s\\0' \"${{!key-}}\"; done"
+    elif shell == "zsh":
         joined = " ".join(keys)
         body = (
             f"for key in {joined}; do print -rn -- \"${{(P)key}}\"; printf '\\0'; done"
@@ -107,6 +110,8 @@ def _environment_values(
 
 def _path_values(context: Context, shell: str) -> list[str] | None:
     body = {
+        "bash": 'IFS=: read -r -a dotfiles_paths <<< "${PATH-}"; '
+        "printf '%s\\0' \"${dotfiles_paths[@]}\"",
         "zsh": "printf '%s\\0' $path",
         "fish": "printf '%s\\0' $PATH",
         "nu": "$env.PATH | to json --raw",
@@ -128,6 +133,36 @@ def _path_values(context: Context, shell: str) -> list[str] | None:
 
 
 def _check_startup(context: Context, shell: str) -> Check:
+    if shell == "bash":
+        environment = clean_shell_environment(context)
+        environment["HISTFILE"] = "/dev/null"
+        commands = (
+            ["/bin/bash", "--login", "-ic", "exit 0"],
+            [
+                "/bin/bash",
+                "--noprofile",
+                "--rcfile",
+                str(context.repo / ".bashrc"),
+                "-ic",
+                "exit 0",
+            ],
+        )
+        results = [
+            _run(command, environment=environment, cwd=context.repo)
+            for command in commands
+        ]
+        if all(result.returncode == 0 for result in results):
+            return Check(
+                "pass",
+                "bash startup",
+                "clean login and non-login startup succeeded",
+            )
+        errors = [
+            line
+            for result in results
+            for line in result.stderr.decode(errors="replace").strip().splitlines()
+        ]
+        return Check("fail", "bash startup", errors[-1] if errors else "startup failed")
     commands = {
         "zsh": ["zsh", "-lic", "exit 0"],
         "fish": ["fish", "-lc", "exit 0"],
@@ -146,6 +181,7 @@ def _check_startup(context: Context, shell: str) -> Check:
 
 def _check_editor(context: Context, shell: str, ssh: bool) -> Check:
     body = {
+        "bash": "printf '%s\\n' \"$EDITOR\"",
         "zsh": "print -r -- $EDITOR",
         "fish": "echo $EDITOR",
         "nu": "print $env.EDITOR",
@@ -171,6 +207,7 @@ def _check_editor(context: Context, shell: str, ssh: bool) -> Check:
 
 def _check_required_command(context: Context, shell: str, command: str) -> Check:
     body = {
+        "bash": f"command -v {shlex.quote(command)} >/dev/null",
         "zsh": f"command -v {shlex.quote(command)} >/dev/null",
         "fish": f"command -q {shlex.quote(command)}",
         "nu": f"if ((which {json.dumps(command)}) | is-empty) {{ exit 1 }}",
@@ -238,6 +275,7 @@ def run_doctor(context: Context) -> DoctorReport:
     required_files = [
         context.paths_file,
         context.shell_root / "required-commands",
+        context.shell_root / "adapters" / "bash.bash",
         context.shell_root / "adapters" / "fish.fish",
         context.shell_root / "adapters" / "zsh.zsh",
         context.shell_root / "adapters" / "nu.nu",

@@ -12,8 +12,13 @@ from pathlib import Path
 
 ENVIRONMENT_KEY = re.compile(r"^[A-Z_][A-Z0-9_]*$")
 INTEGRATION_NAME = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
-SHELLS = ("fish", "zsh", "nu")
-SHELL_ADAPTERS = {"fish": "fish.fish", "zsh": "zsh.zsh", "nu": "nu.nu"}
+SHELLS = ("bash", "fish", "zsh", "nu")
+SHELL_ADAPTERS = {
+    "bash": "bash.bash",
+    "fish": "fish.fish",
+    "zsh": "zsh.zsh",
+    "nu": "nu.nu",
+}
 SHELL_MARKERS = ("native", "unsupported", "deferred")
 
 
@@ -240,8 +245,12 @@ def clean_shell_environment(context: Context, ssh: bool = False) -> dict[str, st
 def adapter_command(context: Context, shell: str, body: str) -> list[str]:
     adapter = context.shell_root / "adapters" / SHELL_ADAPTERS[shell]
     quoted = shlex.quote(str(adapter))
+    if shell == "bash":
+        return ["/bin/bash", "--noprofile", "--norc", "-c", f". {quoted}; {body}"]
     if shell == "fish":
         return ["fish", "--no-config", "-c", f"source {quoted}; {body}"]
     if shell == "zsh":
         return ["zsh", "-dfc", f"source {quoted}; {body}"]
-    return ["nu", "--no-config-file", "-c", f"source {quoted}; {body}"]
+    if shell == "nu":
+        return ["nu", "--no-config-file", "-c", f"source {quoted}; {body}"]
+    raise DotfilesError(f"unsupported shell: {shell}")

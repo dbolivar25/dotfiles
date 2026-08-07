@@ -1,6 +1,6 @@
 version = 1
 mode = "shadow-validation"
-shells = ["fish", "zsh", "nu"]
+shells = ["bash", "fish", "zsh", "nu"]
 
 # Portable path prefixes used only to classify shell-resolved executables.
 [owners.mise]

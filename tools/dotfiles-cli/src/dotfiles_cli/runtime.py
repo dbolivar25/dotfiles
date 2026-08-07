@@ -154,7 +154,7 @@ def load_runtime_ownership(path: Path) -> RuntimeOwnership:
         raise DotfilesError("runtime ownership mode must be shadow-validation")
     shells = _strings(data.get("shells"), "shells")
     if shells != SHELLS:
-        raise DotfilesError("runtime ownership shells must be fish, zsh, and nu")
+        raise DotfilesError("runtime ownership shells must be bash, fish, zsh, and nu")
 
     raw_owners = data.get("owners")
     if not isinstance(raw_owners, dict) or not raw_owners:
@@ -320,13 +320,22 @@ def _probe_shell(
             'printf \'%s\\t%s\\n\' "$name" "$resolved"; end'
         )
         arguments = adapter_command(context, shell, body)
-    else:
+    elif shell == "bash":
+        names = " ".join(commands)
+        body = (
+            f'for name in {names}; do resolved=$(type -P "$name" 2>/dev/null || true); '
+            'printf \'%s\\t%s\\n\' "$name" "$resolved"; done'
+        )
+        arguments = adapter_command(context, shell, body)
+    elif shell == "zsh":
         names = " ".join(commands)
         body = (
             f"for name in {names}; do resolved=$(whence -p -- $name 2>/dev/null); "
             'printf \'%s\\t%s\\n\' "$name" "$resolved"; done'
         )
         arguments = adapter_command(context, shell, body)
+    else:
+        return {command: None for command in commands}
     environment = clean_shell_environment(context)
     try:
         if shell == "nu":
