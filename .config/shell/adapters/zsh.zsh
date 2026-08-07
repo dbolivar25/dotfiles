@@ -30,7 +30,7 @@ for integration in "$DOTFILES_SHELL_ROOT"/integrations/*/zsh.zsh(N); do
   source "$integration"
 done
 
-# Runtime selection must run after compatibility managers such as NVM.
+# Runtime selection must run after compatibility integrations.
 mise_integration="$DOTFILES_SHELL_ROOT/integrations/mise/zsh.zsh"
 [[ -f "$mise_integration" ]] && source "$mise_integration"
 
