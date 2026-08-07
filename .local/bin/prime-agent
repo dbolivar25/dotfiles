@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+
+exec mise exec node@lts -- "${HOME}/.local/share/prime-agent/bin/prime-agent" "$@"
