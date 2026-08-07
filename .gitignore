@@ -8,3 +8,4 @@ tools/**/.venv/
 tools/**/__pycache__/
 tools/**/*.pyc
 .ruff_cache/
+rebar3.crashdump

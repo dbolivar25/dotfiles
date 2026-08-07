@@ -20,7 +20,11 @@ from dotfiles_cli.runtime import (
 
 MISE_CONFIG = """# Managed by the dotfiles runtime ownership policy.
 [tools]
+elixir = "1.19.5-otp-28"
+erlang = "28.5"
+go = "1.23.11"
 node = "lts"
+ruby = "3.3.1"
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]
@@ -162,10 +166,8 @@ class CliTest(unittest.TestCase):
                 "node",
                 "ruby",
                 "go",
-                "java",
                 "elixir",
                 "erlang",
-                "python",
                 "rust",
                 "ocaml",
                 "haskell",
@@ -176,8 +178,13 @@ class CliTest(unittest.TestCase):
         self.assertEqual(declarations["node"].owner, "mise")
         self.assertEqual(declarations["node"].global_version, "lts")
         self.assertTrue(declarations["node"].idiomatic_version_file)
+        self.assertEqual(declarations["ruby"].commands, ("ruby", "bundle"))
+        self.assertEqual(declarations["ruby"].global_version, "3.3.1")
+        self.assertEqual(declarations["go"].global_version, "1.23.11")
         self.assertEqual(declarations["elixir"].phase, "shadow")
-        self.assertEqual(declarations["python"].owner, "uv")
+        self.assertEqual(declarations["elixir"].commands, ("elixir", "mix"))
+        self.assertEqual(declarations["elixir"].global_version, "1.19.5-otp-28")
+        self.assertEqual(declarations["erlang"].global_version, "28.5")
         self.assertEqual(declarations["rust"].phase, "retained")
 
     def test_runtime_status_json_reports_shadow_not_consolidation(self) -> None:
@@ -205,6 +212,15 @@ class CliTest(unittest.TestCase):
         node = next(item for item in payload["runtimes"] if item["name"] == "node")
         self.assertEqual(node["status"], "provisional")
         self.assertFalse(node["legacy_shadowing"])
+        self.assertNotIn("java", {item["name"] for item in payload["runtimes"]})
+        self.assertNotIn("python", {item["name"] for item in payload["runtimes"]})
+        self.assertFalse(
+            any(
+                name in warning.lower()
+                for warning in payload["warnings"]
+                for name in ("java", "python")
+            )
+        )
 
     def test_runtime_configure_is_dry_by_default(self) -> None:
         target = self.repo / ".config" / "mise" / "config.toml"
@@ -231,8 +247,11 @@ class CliTest(unittest.TestCase):
         target = self.repo / ".config" / "mise" / "config.toml"
         content = target.read_text()
         self.assertIn('node = "lts"', content)
-        self.assertNotIn("ruby", content)
-        self.assertNotIn("elixir", content)
+        self.assertIn('ruby = "3.3.1"', content)
+        self.assertIn('go = "1.23.11"', content)
+        self.assertIn('elixir = "1.19.5-otp-28"', content)
+        self.assertIn('erlang = "28.5"', content)
+        self.assertNotIn("java", content)
 
     def test_runtime_configure_json_plan_is_machine_readable(self) -> None:
         status, output = self.run_cli("--json", "runtime", "configure")

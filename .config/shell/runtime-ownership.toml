@@ -51,51 +51,44 @@ gates = ["retire legacy Node activation and stores only after an observation win
 
 [[runtimes]]
 name = "ruby"
-commands = ["ruby"]
+commands = ["ruby", "bundle"]
 owner = "mise"
 phase = "shadow"
+global_version = "3.3.1"
 legacy_owners = ["rbenv", "homebrew", "system"]
-gates = ["install required Ruby versions in mise", "enable mise activation in Fish, Zsh, and Nushell", "verify representative projects", "remove rbenv and Homebrew Ruby activation only after parity"]
+gates = ["retire legacy Ruby packages and stores only after an observation window"]
 
 [[runtimes]]
 name = "go"
 commands = ["go"]
 owner = "mise"
 phase = "shadow"
+global_version = "1.23.11"
 legacy_owners = ["manual", "homebrew", "system"]
-gates = ["install required Go versions in mise", "enable mise activation in Fish, Zsh, and Nushell", "verify GOPATH tools and representative projects", "remove the manual Go PATH entry only after parity"]
+gates = ["retire the manual Go installation only after an observation window"]
 
-[[runtimes]]
-name = "java"
-commands = ["java"]
-owner = "mise"
-phase = "shadow"
-legacy_owners = ["homebrew", "system"]
-gates = ["install the required Temurin version in mise", "enable mise activation in Fish, Zsh, and Nushell", "verify java and JAVA_HOME", "remove duplicate Java ownership only after parity"]
+# Java is application-owned rather than a global shell runtime: Homebrew
+# launchers provide OpenJDK where needed, and Trader Workstation bundles a JRE.
 
 [[runtimes]]
 name = "elixir"
-commands = ["elixir"]
+commands = ["elixir", "mix"]
 owner = "mise"
 phase = "shadow"
+global_version = "1.19.5-otp-28"
 legacy_owners = ["homebrew", "system"]
-gates = ["install the required Elixir and OTP pair in mise", "enable mise activation in Fish, Zsh, and Nushell", "verify Mix, Hex, and Rebar", "rebuild and test retained Elixir projects", "retire Homebrew Elixir only after compatibility and project parity"]
+gates = ["fix retained project warnings and the light_controller route test before claiming project parity", "retire Homebrew Elixir only after an observation window"]
 
 [[runtimes]]
 name = "erlang"
 commands = ["erl"]
 owner = "mise"
 phase = "shadow"
+global_version = "28.5"
 legacy_owners = ["homebrew", "system"]
-gates = ["keep Erlang and Elixir versions compatible", "enable mise activation in Fish, Zsh, and Nushell", "verify OTP, Mix, Hex, and Rebar", "rebuild and test retained Erlang and Elixir projects", "retire Homebrew Erlang only after compatibility and project parity"]
+gates = ["keep Homebrew Erlang while Gleam depends on it"]
 
-[[runtimes]]
-name = "python"
-commands = ["python", "python3"]
-owner = "uv"
-phase = "retained"
-legacy_owners = ["homebrew", "system", "mise"]
-gates = ["preserve project .python-version behavior", "avoid global mise Python activation"]
+# uv owns project-selected Python interpreters, not global python commands.
 
 [[runtimes]]
 name = "rust"
@@ -103,7 +96,7 @@ commands = ["rustc", "cargo"]
 owner = "rustup"
 phase = "retained"
 legacy_owners = ["homebrew", "system", "mise"]
-gates = ["preserve rust-toolchain.toml behavior", "remove overlapping project mise declarations separately"]
+gates = []
 
 [[runtimes]]
 name = "ocaml"
@@ -111,7 +104,7 @@ commands = ["ocaml"]
 owner = "opam"
 phase = "retained"
 legacy_owners = ["homebrew", "system", "mise"]
-gates = ["preserve OPAM switch semantics", "design a Nushell environment adapter separately"]
+gates = ["restore representative project tooling before claiming project parity", "use opam exec in Nushell until a native adapter exists"]
 
 [[runtimes]]
 name = "haskell"

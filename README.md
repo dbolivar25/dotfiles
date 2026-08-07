@@ -76,13 +76,22 @@ dotfiles --json path add ~/.example/bin
 
 ## Runtime ownership migration
 
-Runtime consolidation is currently in **shadow validation**. The tracked
-ownership file records the intended boundary without changing activation:
+Runtime consolidation remains in **shadow validation** while activated mise
+runtimes complete their observation windows. The tracked ownership file records
+current owners and remaining retirement gates:
 
-- mise is the candidate owner for Node, Ruby, Go, Java, Elixir, and Erlang,
-  subject to compatibility and project proof.
-- uv, rustup, OPAM, GHCup, Bun, and the Microsoft .NET installation remain the
-  specialist owners for their existing runtimes.
+- mise is the configured global owner for Node, Ruby, Go, Elixir, and Erlang;
+  remaining compatibility, observation, and project gates stay explicit.
+- Java is application-owned rather than a global shell runtime: Homebrew-backed
+  launchers provide OpenJDK where needed, and Trader Workstation bundles a JRE.
+- uv owns project-selected Python interpreters; global `python` and `python3`
+  stay outside the runtime inventory. Project-declared uv minimums remain
+  compatibility gates.
+- rustup and OPAM retain specialist ownership. OPAM activates natively in Fish
+  and Zsh; Nushell uses `opam exec -- <command>` because OPAM has no native Nu
+  hook. The installed direnv supports Fish and Zsh, but not Nushell.
+- GHCup, Bun, and the Microsoft .NET installation remain specialist owners for
+  their existing runtimes.
 - Elixir is retained and is not a pruning candidate. Mise ownership of Elixir
   and its compatible Erlang/OTP version remains provisional until its tooling
   and retained projects pass migration checks.
@@ -105,10 +114,11 @@ only after the required versions and representative projects pass parity checks
 in Fish, Zsh, and Nushell.
 
 `runtime configure` renders `.config/mise/config.toml` only from explicitly
-approved ownership declarations. Node currently approves an ordinary home
-default of `lts` and lets project `.nvmrc` files override it. The command is a
-dry run unless passed `--apply`; it writes configuration only and does not run
-mise, install Node, activate mise, or claim that Node ownership is consolidated.
+approved ownership declarations. The current global defaults cover Node `lts`,
+Ruby `3.3.1`, Go `1.23.11`, Elixir `1.19.5-otp-28`, and Erlang `28.5`; project
+version files still take precedence where supported. The command is a dry run
+unless passed `--apply`; it writes configuration only and does not run mise,
+install runtimes, activate mise, or claim that every retirement gate is closed.
 
 ## Installing programs
 

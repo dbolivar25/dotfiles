@@ -1,1 +1,1 @@
-OPAM does not provide a native Nushell environment hook.
+OPAM has no native Nushell hook; use `opam exec -- <command>` for project tools.
