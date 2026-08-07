@@ -26,7 +26,12 @@ export EDITOR="$editor"
 export VISUAL="$editor"
 
 for integration in "$DOTFILES_SHELL_ROOT"/integrations/*/zsh.zsh(N); do
+  [[ "$integration" == */mise/zsh.zsh ]] && continue
   source "$integration"
 done
 
-unset value_file key value managed_paths entry editor_profile editor integration
+# Runtime selection must run after compatibility managers such as NVM.
+mise_integration="$DOTFILES_SHELL_ROOT/integrations/mise/zsh.zsh"
+[[ -f "$mise_integration" ]] && source "$mise_integration"
+
+unset value_file key value managed_paths entry editor_profile editor integration mise_integration

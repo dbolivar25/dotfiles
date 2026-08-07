@@ -12,7 +12,11 @@ from unittest.mock import patch
 from dotfiles_cli.cli import main
 from dotfiles_cli.core import Context
 from dotfiles_cli.doctor import run_doctor
-from dotfiles_cli.runtime import collect_runtime_report, load_runtime_ownership
+from dotfiles_cli.runtime import (
+    _probe_shell,
+    collect_runtime_report,
+    load_runtime_ownership,
+)
 
 MISE_CONFIG = """# Managed by the dotfiles runtime ownership policy.
 [tools]
@@ -32,6 +36,7 @@ class CliTest(unittest.TestCase):
         (shell_root / "adapters").mkdir(parents=True)
         (shell_root / "environment.d").mkdir()
         (shell_root / "integrations").mkdir()
+        (self.repo / ".config" / "nushell").mkdir()
         (shell_root / "behavior" / "editor").mkdir(parents=True)
         (shell_root / "adapters" / "fish.fish").write_text("# Fish adapter\n")
         (shell_root / "adapters" / "zsh.zsh").write_text("# Zsh adapter\n")
@@ -40,6 +45,8 @@ class CliTest(unittest.TestCase):
         (shell_root / "behavior" / "editor" / "ssh").write_text("vim\n")
         (shell_root / "paths").write_text("# Managed paths\n${HOME}/.local/bin\n")
         (shell_root / "required-commands").write_text("")
+        (self.repo / ".config" / "nushell" / "env.nu").write_text("")
+        (self.repo / ".config" / "nushell" / "config.nu").write_text("")
         source = (
             Path(__file__).parents[3] / ".config" / "shell" / "runtime-ownership.toml"
         )
@@ -331,6 +338,9 @@ class CliTest(unittest.TestCase):
             collect_runtime_report(Context.discover(str(self.repo)))
         executables = [invocation.args[0][0] for invocation in run.call_args_list]
         self.assertEqual(executables, ["fish", "zsh", "nu"])
+        nu_arguments = run.call_args_list[2].args[0]
+        self.assertIn("--env-config", nu_arguments)
+        self.assertIn("--config", nu_arguments)
         inspected = {
             "node",
             "ruby",
@@ -342,6 +352,20 @@ class CliTest(unittest.TestCase):
             "rustc",
         }
         self.assertFalse(inspected.intersection(executables))
+
+    def test_nu_runtime_probe_uses_disposable_cache(self) -> None:
+        completed = __import__("subprocess").CompletedProcess(
+            ["nu"], returncode=0, stdout=b"[]", stderr=b""
+        )
+        with patch(
+            "dotfiles_cli.runtime.subprocess.run", return_value=completed
+        ) as run:
+            self.assertEqual(
+                _probe_shell(Context.discover(str(self.repo)), "nu", ()), {}
+            )
+        cache_dir = Path(run.call_args.kwargs["env"]["XDG_CACHE_HOME"])
+        self.assertFalse(cache_dir.exists())
+        self.assertNotEqual(cache_dir, Path.home() / "Library" / "Caches")
 
     def test_runtime_status_is_read_only(self) -> None:
         target = self.repo / ".config" / "shell" / "runtime-ownership.toml"

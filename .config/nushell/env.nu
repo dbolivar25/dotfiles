@@ -94,3 +94,13 @@ $env.NU_PLUGIN_DIRS = [
 
 # Shared environment and behavior contracts.
 source ~/.config/shell/adapters/nu.nu
+
+# Nushell cannot evaluate activation output inline, so build mise's native
+# module outside the tracked dotfiles tree before config.nu is parsed.
+let mise_module_dir = ($nu.cache-dir | path join "dotfiles")
+mkdir $mise_module_dir
+# Mise 2025.10.7 can emit duplicate hides during deactivation.
+^mise activate nu
+| str replace --all 'hide-env $var.name' 'hide-env --ignore-errors $var.name'
+| save ($mise_module_dir | path join "mise.nu") --force
+$env.NU_LIB_DIRS = ($env.NU_LIB_DIRS | prepend $mise_module_dir | uniq)

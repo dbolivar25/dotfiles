@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -285,33 +286,69 @@ def configure_runtime(context: Context, *, apply: bool = False) -> Plan:
 def _probe_shell(
     context: Context, shell: str, commands: tuple[str, ...]
 ) -> dict[str, str | None]:
+    arguments: list[str]
     if shell == "nu":
         names = " ".join(json.dumps(command) for command in commands)
-        body = (
+        query = (
             f"[{names}] | each {{|name| {{name: $name, path: "
             '((which $name | get -i 0.path | default ""))}} | to json --raw'
         )
+        env_config = context.repo / ".config" / "nushell" / "env.nu"
+        config = context.repo / ".config" / "nushell" / "config.nu"
+        if env_config.is_file() and config.is_file():
+            run_hooks = (
+                "for hook in $env.config.hooks.pre_prompt { "
+                "if (($hook | describe) | str starts-with 'record') { "
+                "if (do $hook.condition) { do --env $hook.code } "
+                "} else { do --env $hook } }"
+            )
+            arguments = [
+                "nu",
+                "--env-config",
+                str(env_config),
+                "--config",
+                str(config),
+                "-c",
+                f"{run_hooks}; {query}",
+            ]
+        else:
+            arguments = adapter_command(context, shell, query)
     elif shell == "fish":
         names = " ".join(commands)
         body = (
             f"for name in {names}; set -l resolved (command -s -- $name 2>/dev/null); "
             'printf \'%s\\t%s\\n\' "$name" "$resolved"; end'
         )
+        arguments = adapter_command(context, shell, body)
     else:
         names = " ".join(commands)
         body = (
             f"for name in {names}; do resolved=$(whence -p -- $name 2>/dev/null); "
             'printf \'%s\\t%s\\n\' "$name" "$resolved"; done'
         )
+        arguments = adapter_command(context, shell, body)
+    environment = clean_shell_environment(context)
     try:
-        result = subprocess.run(
-            adapter_command(context, shell, body),
-            cwd=context.repo,
-            env=clean_shell_environment(context),
-            capture_output=True,
-            timeout=20,
-            check=False,
-        )
+        if shell == "nu":
+            with tempfile.TemporaryDirectory(prefix="dotfiles-runtime-") as cache_dir:
+                environment["XDG_CACHE_HOME"] = cache_dir
+                result = subprocess.run(
+                    arguments,
+                    cwd=context.repo,
+                    env=environment,
+                    capture_output=True,
+                    timeout=20,
+                    check=False,
+                )
+        else:
+            result = subprocess.run(
+                arguments,
+                cwd=context.repo,
+                env=environment,
+                capture_output=True,
+                timeout=20,
+                check=False,
+            )
     except (OSError, subprocess.TimeoutExpired):
         return {command: None for command in commands}
     if result.returncode != 0:

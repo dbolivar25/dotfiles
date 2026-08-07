@@ -47,7 +47,7 @@ phase = "shadow"
 global_version = "lts"
 idiomatic_version_file = true
 legacy_owners = ["nvm", "homebrew", "manual", "system"]
-gates = ["install required Node versions in mise", "enable mise activation in Fish, Zsh, and Nushell", "verify project pins and Corepack package-manager selection", "remove legacy Node activation only after parity"]
+gates = ["retire legacy Node activation and stores only after an observation window"]
 
 [[runtimes]]
 name = "ruby"

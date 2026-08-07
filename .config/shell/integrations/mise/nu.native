@@ -1,0 +1,1 @@
+Nushell generates mise's native module in env.nu and loads it from config.nu.
