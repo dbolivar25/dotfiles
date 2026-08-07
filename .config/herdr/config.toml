@@ -12,7 +12,7 @@ light_name = "rose-pine-dawn"
 default_shell = "/opt/homebrew/bin/fish"
 
 [keys]
-prefix = "cmd+b"
+prefix = "cmd+;"
 
 [[keys.command]]
 key = "prefix+l"
