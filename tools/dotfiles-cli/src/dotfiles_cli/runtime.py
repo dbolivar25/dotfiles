@@ -13,7 +13,9 @@ from .core import (
     SHELLS,
     Context,
     DotfilesError,
+    Plan,
     adapter_command,
+    atomic_write,
     clean_shell_environment,
     expand_home,
 )
@@ -35,6 +37,8 @@ class RuntimeDeclaration:
     commands: tuple[str, ...]
     owner: str
     phase: str
+    global_version: str | None
+    idiomatic_version_file: bool
     legacy_owners: tuple[str, ...]
     gates: tuple[str, ...]
 
@@ -186,6 +190,22 @@ def load_runtime_ownership(path: Path) -> RuntimeOwnership:
             raise DotfilesError(f"runtime {name} references unknown owner: {owner}")
         if phase not in PHASES:
             raise DotfilesError(f"runtime {name} has invalid phase: {phase}")
+        global_version = raw_runtime.get("global_version")
+        if global_version is not None and (
+            not isinstance(global_version, str)
+            or not global_version.strip()
+            or any(character in global_version for character in "\r\n\0")
+        ):
+            raise DotfilesError(f"runtime {name} has an invalid global version")
+        idiomatic_version_file = raw_runtime.get("idiomatic_version_file", False)
+        if not isinstance(idiomatic_version_file, bool):
+            raise DotfilesError(
+                f"runtime {name} idiomatic version-file flag must be boolean"
+            )
+        if (global_version is not None or idiomatic_version_file) and owner != "mise":
+            raise DotfilesError(
+                f"runtime {name} cannot configure mise when its owner is {owner}"
+            )
         commands = _strings(raw_runtime.get("commands"), f"runtime {name} commands")
         if any(not COMMAND_NAME.fullmatch(command) for command in commands):
             raise DotfilesError(f"runtime {name} has an invalid command")
@@ -204,9 +224,62 @@ def load_runtime_ownership(path: Path) -> RuntimeOwnership:
             f"runtime {name} gates",
             allow_empty=phase == "retained",
         )
-        runtimes.append(RuntimeDeclaration(name, commands, owner, phase, legacy, gates))
+        runtimes.append(
+            RuntimeDeclaration(
+                name,
+                commands,
+                owner,
+                phase,
+                global_version,
+                idiomatic_version_file,
+                legacy,
+                gates,
+            )
+        )
 
     return RuntimeOwnership(1, "shadow-validation", shells, owners, tuple(runtimes))
+
+
+def _render_mise_config(ownership: RuntimeOwnership) -> str:
+    versions = sorted(
+        (runtime.name, runtime.global_version)
+        for runtime in ownership.runtimes
+        if runtime.global_version is not None
+    )
+    idiomatic_tools = sorted(
+        runtime.name for runtime in ownership.runtimes if runtime.idiomatic_version_file
+    )
+    lines = ["# Managed by the dotfiles runtime ownership policy."]
+    if versions:
+        lines.extend(
+            [
+                "[tools]",
+                *(f"{name} = {json.dumps(version)}" for name, version in versions),
+            ]
+        )
+    if idiomatic_tools:
+        rendered_tools = ", ".join(json.dumps(name) for name in idiomatic_tools)
+        if versions:
+            lines.append("")
+        lines.extend(
+            [
+                "[settings]",
+                f"idiomatic_version_file_enable_tools = [{rendered_tools}]",
+            ]
+        )
+    return "\n".join(lines) + "\n"
+
+
+def configure_runtime(context: Context, *, apply: bool = False) -> Plan:
+    ownership = load_runtime_ownership(context.runtime_ownership_file)
+    content = _render_mise_config(ownership)
+    target = context.mise_config_file
+    plan = Plan("Configure approved mise runtime policy")
+    if not target.is_file() or target.read_text() != content:
+        plan.add("write", target, "render approved runtime declarations")
+        if apply:
+            atomic_write(target, content, mode=0o644)
+    return plan
 
 
 def _probe_shell(

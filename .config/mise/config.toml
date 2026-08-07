@@ -1,0 +1,6 @@
+# Managed by the dotfiles runtime ownership policy.
+[tools]
+node = "lts"
+
+[settings]
+idiomatic_version_file_enable_tools = ["node"]

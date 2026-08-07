@@ -14,6 +14,14 @@ from dotfiles_cli.core import Context
 from dotfiles_cli.doctor import run_doctor
 from dotfiles_cli.runtime import collect_runtime_report, load_runtime_ownership
 
+MISE_CONFIG = """# Managed by the dotfiles runtime ownership policy.
+[tools]
+node = "lts"
+
+[settings]
+idiomatic_version_file_enable_tools = ["node"]
+"""
+
 
 class CliTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -159,6 +167,8 @@ class CliTest(unittest.TestCase):
             },
         )
         self.assertEqual(declarations["node"].owner, "mise")
+        self.assertEqual(declarations["node"].global_version, "lts")
+        self.assertTrue(declarations["node"].idiomatic_version_file)
         self.assertEqual(declarations["elixir"].phase, "shadow")
         self.assertEqual(declarations["python"].owner, "uv")
         self.assertEqual(declarations["rust"].phase, "retained")
@@ -188,6 +198,57 @@ class CliTest(unittest.TestCase):
         node = next(item for item in payload["runtimes"] if item["name"] == "node")
         self.assertEqual(node["status"], "provisional")
         self.assertFalse(node["legacy_shadowing"])
+
+    def test_runtime_configure_is_dry_by_default(self) -> None:
+        target = self.repo / ".config" / "mise" / "config.toml"
+        status, output = self.run_cli("runtime", "configure")
+        self.assertEqual(status, 0)
+        self.assertIn("Dry run only", output)
+        self.assertFalse(target.exists())
+
+    def test_runtime_configure_apply_writes_exact_approved_config(self) -> None:
+        status, _ = self.run_cli("runtime", "configure", "--apply")
+        self.assertEqual(status, 0)
+        target = self.repo / ".config" / "mise" / "config.toml"
+        self.assertEqual(target.read_text(), MISE_CONFIG)
+        self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o644)
+
+    def test_runtime_configure_is_idempotent(self) -> None:
+        self.run_cli("runtime", "configure", "--apply")
+        status, output = self.run_cli("runtime", "configure", "--apply")
+        self.assertEqual(status, 0)
+        self.assertIn("No changes planned", output)
+
+    def test_runtime_configure_omits_unapproved_shadow_runtimes(self) -> None:
+        self.run_cli("runtime", "configure", "--apply")
+        target = self.repo / ".config" / "mise" / "config.toml"
+        content = target.read_text()
+        self.assertIn('node = "lts"', content)
+        self.assertNotIn("ruby", content)
+        self.assertNotIn("elixir", content)
+
+    def test_runtime_configure_json_plan_is_machine_readable(self) -> None:
+        status, output = self.run_cli("--json", "runtime", "configure")
+        self.assertEqual(status, 0)
+        payload = json.loads(output)
+        self.assertTrue(payload["changes"])
+        self.assertFalse(payload["applied"])
+        self.assertEqual(payload["actions"][0]["operation"], "write")
+
+    def test_runtime_configure_does_not_run_mise_or_subprocesses(self) -> None:
+        with patch("dotfiles_cli.runtime.subprocess.run") as run:
+            status, _ = self.run_cli("runtime", "configure", "--apply")
+        self.assertEqual(status, 0)
+        run.assert_not_called()
+
+    def test_runtime_configure_rejects_malformed_approval(self) -> None:
+        target = self.repo / ".config" / "shell" / "runtime-ownership.toml"
+        target.write_text(
+            target.read_text().replace('global_version = "lts"', "global_version = 24")
+        )
+        status, _ = self.run_cli("runtime", "configure")
+        self.assertEqual(status, 2)
+        self.assertFalse((self.repo / ".config" / "mise" / "config.toml").exists())
 
     def test_runtime_conflicts_are_data_not_command_failures(self) -> None:
         home = str(Path.home())

@@ -93,6 +93,8 @@ executables:
 ```sh
 dotfiles runtime status
 dotfiles --json runtime status
+dotfiles runtime configure
+dotfiles runtime configure --apply
 ```
 
 The report classifies path ownership, cross-shell disagreement, legacy
@@ -101,6 +103,12 @@ data: this command does not claim ownership is consolidated, enable mise,
 install versions, edit projects, or remove legacy managers. Those changes come
 only after the required versions and representative projects pass parity checks
 in Fish, Zsh, and Nushell.
+
+`runtime configure` renders `.config/mise/config.toml` only from explicitly
+approved ownership declarations. Node currently approves an ordinary home
+default of `lts` and lets project `.nvmrc` files override it. The command is a
+dry run unless passed `--apply`; it writes configuration only and does not run
+mise, install Node, activate mise, or claim that Node ownership is consolidated.
 
 ## Installing programs
 

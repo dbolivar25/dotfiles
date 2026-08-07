@@ -64,6 +64,10 @@ class Context:
     def runtime_ownership_file(self) -> Path:
         return self.shell_root / "runtime-ownership.toml"
 
+    @property
+    def mise_config_file(self) -> Path:
+        return self.repo / ".config" / "mise" / "config.toml"
+
 
 @dataclass(frozen=True)
 class Action:

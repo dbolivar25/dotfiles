@@ -26,7 +26,7 @@ from .core import (
     validate_integration_name,
 )
 from .doctor import run_doctor
-from .runtime import collect_runtime_report
+from .runtime import collect_runtime_report, configure_runtime
 
 
 def _print(value: str) -> None:
@@ -395,11 +395,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     commands.add_parser("doctor", help="validate cross-shell behavior")
     commands.add_parser("status", help="show repository and integration status")
-    commands.add_parser(
-        "runtime", help="inspect shadow runtime ownership"
-    ).add_subparsers(dest="runtime_command", required=True).add_parser(
-        "status", help="resolve runtime paths without running runtimes"
+    runtime = commands.add_parser(
+        "runtime", help="inspect and configure shadow runtime ownership"
+    ).add_subparsers(dest="runtime_command", required=True)
+    runtime.add_parser("status", help="resolve runtime paths without running runtimes")
+    runtime_configure = runtime.add_parser(
+        "configure", help="render approved mise configuration"
     )
+    runtime_configure.add_argument("--apply", action="store_true")
 
     path = commands.add_parser(
         "path", help="manage shared PATH entries"
@@ -470,6 +473,10 @@ def dispatch(arguments: argparse.Namespace, context: Context) -> int:
     if arguments.command == "status":
         return _status(context, arguments.json)
     if arguments.command == "runtime":
+        if arguments.runtime_command == "configure":
+            plan = configure_runtime(context, apply=arguments.apply)
+            _apply_message(plan, arguments.apply, arguments.json)
+            return 0
         report = collect_runtime_report(context)
         _print(report.render(as_json=arguments.json))
         return 0
