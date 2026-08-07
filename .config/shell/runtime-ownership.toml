@@ -1,0 +1,136 @@
+version = 1
+mode = "shadow-validation"
+shells = ["fish", "zsh", "nu"]
+
+# Portable path prefixes used only to classify shell-resolved executables.
+[owners.mise]
+path_prefixes = ["${HOME}/.local/share/mise/installs/", "${HOME}/.mise/installs/"]
+
+[owners.uv]
+path_prefixes = ["${HOME}/.local/share/uv/python/"]
+
+[owners.rustup]
+path_prefixes = ["${HOME}/.rustup/toolchains/", "${HOME}/.cargo/bin/"]
+
+[owners.opam]
+path_prefixes = ["${HOME}/.opam/"]
+
+[owners.ghcup]
+path_prefixes = ["${HOME}/.ghcup/"]
+
+[owners.bun]
+path_prefixes = ["${HOME}/.bun/"]
+
+[owners.dotnet]
+path_prefixes = ["${HOME}/.dotnet/", "/usr/local/share/dotnet/"]
+
+[owners.nvm]
+path_prefixes = ["${HOME}/.nvm/", "${HOME}/.config/nvm/", "${HOME}/.local/share/nvm/"]
+
+[owners.rbenv]
+path_prefixes = ["${HOME}/.rbenv/"]
+
+[owners.homebrew]
+path_prefixes = ["/opt/homebrew/", "/usr/local/Cellar/", "/usr/local/opt/"]
+
+[owners.manual]
+path_prefixes = ["/usr/local/go/", "/usr/local/bin/"]
+
+[owners.system]
+path_prefixes = ["/usr/bin/", "/bin/", "/usr/sbin/", "/sbin/"]
+
+[[runtimes]]
+name = "node"
+commands = ["node"]
+owner = "mise"
+phase = "shadow"
+legacy_owners = ["nvm", "homebrew", "manual", "system"]
+gates = ["install required Node versions in mise", "enable mise activation in Fish, Zsh, and Nushell", "verify project pins and Corepack package-manager selection", "remove legacy Node activation only after parity"]
+
+[[runtimes]]
+name = "ruby"
+commands = ["ruby"]
+owner = "mise"
+phase = "shadow"
+legacy_owners = ["rbenv", "homebrew", "system"]
+gates = ["install required Ruby versions in mise", "enable mise activation in Fish, Zsh, and Nushell", "verify representative projects", "remove rbenv and Homebrew Ruby activation only after parity"]
+
+[[runtimes]]
+name = "go"
+commands = ["go"]
+owner = "mise"
+phase = "shadow"
+legacy_owners = ["manual", "homebrew", "system"]
+gates = ["install required Go versions in mise", "enable mise activation in Fish, Zsh, and Nushell", "verify GOPATH tools and representative projects", "remove the manual Go PATH entry only after parity"]
+
+[[runtimes]]
+name = "java"
+commands = ["java"]
+owner = "mise"
+phase = "shadow"
+legacy_owners = ["homebrew", "system"]
+gates = ["install the required Temurin version in mise", "enable mise activation in Fish, Zsh, and Nushell", "verify java and JAVA_HOME", "remove duplicate Java ownership only after parity"]
+
+[[runtimes]]
+name = "elixir"
+commands = ["elixir"]
+owner = "mise"
+phase = "shadow"
+legacy_owners = ["homebrew", "system"]
+gates = ["install the required Elixir and OTP pair in mise", "enable mise activation in Fish, Zsh, and Nushell", "verify Mix, Hex, and Rebar", "rebuild and test retained Elixir projects", "retire Homebrew Elixir only after compatibility and project parity"]
+
+[[runtimes]]
+name = "erlang"
+commands = ["erl"]
+owner = "mise"
+phase = "shadow"
+legacy_owners = ["homebrew", "system"]
+gates = ["keep Erlang and Elixir versions compatible", "enable mise activation in Fish, Zsh, and Nushell", "verify OTP, Mix, Hex, and Rebar", "rebuild and test retained Erlang and Elixir projects", "retire Homebrew Erlang only after compatibility and project parity"]
+
+[[runtimes]]
+name = "python"
+commands = ["python", "python3"]
+owner = "uv"
+phase = "retained"
+legacy_owners = ["homebrew", "system", "mise"]
+gates = ["preserve project .python-version behavior", "avoid global mise Python activation"]
+
+[[runtimes]]
+name = "rust"
+commands = ["rustc", "cargo"]
+owner = "rustup"
+phase = "retained"
+legacy_owners = ["homebrew", "system", "mise"]
+gates = ["preserve rust-toolchain.toml behavior", "remove overlapping project mise declarations separately"]
+
+[[runtimes]]
+name = "ocaml"
+commands = ["ocaml"]
+owner = "opam"
+phase = "retained"
+legacy_owners = ["homebrew", "system", "mise"]
+gates = ["preserve OPAM switch semantics", "design a Nushell environment adapter separately"]
+
+[[runtimes]]
+name = "haskell"
+commands = ["ghc", "cabal", "stack"]
+owner = "ghcup"
+phase = "retained"
+legacy_owners = ["homebrew", "system", "mise"]
+gates = []
+
+[[runtimes]]
+name = "bun"
+commands = ["bun"]
+owner = "bun"
+phase = "retained"
+legacy_owners = ["homebrew", "system", "mise"]
+gates = []
+
+[[runtimes]]
+name = "dotnet"
+commands = ["dotnet"]
+owner = "dotnet"
+phase = "retained"
+legacy_owners = ["homebrew", "system", "mise"]
+gates = []

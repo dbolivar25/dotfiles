@@ -31,6 +31,7 @@ contracts without sharing shell syntax:
 ├── environment.d/        # One public value per file
 ├── secrets.d/            # One ignored private value per file
 ├── behavior/             # Cross-shell behavior contracts
+├── runtime-ownership.toml # Runtime ownership intent and migration gates
 ├── integrations/         # Tool-local shell adapters and support markers
 └── adapters/             # Fish, Zsh, and Nushell loaders
 ```
@@ -72,6 +73,34 @@ Use global `--json` for automation:
 dotfiles --json doctor
 dotfiles --json path add ~/.example/bin
 ```
+
+## Runtime ownership migration
+
+Runtime consolidation is currently in **shadow validation**. The tracked
+ownership file records the intended boundary without changing activation:
+
+- mise is the candidate owner for Node, Ruby, Go, Java, Elixir, and Erlang,
+  subject to compatibility and project proof.
+- uv, rustup, OPAM, GHCup, Bun, and the Microsoft .NET installation remain the
+  specialist owners for their existing runtimes.
+- Elixir is retained and is not a pruning candidate. Mise ownership of Elixir
+  and its compatible Erlang/OTP version remains provisional until its tooling
+  and retained projects pass migration checks.
+
+Inspect what each shell resolves without running the inspected runtime
+executables:
+
+```sh
+dotfiles runtime status
+dotfiles --json runtime status
+```
+
+The report classifies path ownership, cross-shell disagreement, legacy
+shadowing, and unresolved migration gates. Existing conflicts are warnings and
+data: this command does not claim ownership is consolidated, enable mise,
+install versions, edit projects, or remove legacy managers. Those changes come
+only after the required versions and representative projects pass parity checks
+in Fish, Zsh, and Nushell.
 
 ## Installing programs
 

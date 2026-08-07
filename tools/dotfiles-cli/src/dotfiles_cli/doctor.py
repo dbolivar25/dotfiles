@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import shlex
 import subprocess
 from dataclasses import asdict, dataclass
@@ -12,11 +11,14 @@ from .core import (
     ENVIRONMENT_KEY,
     SHELLS,
     Context,
+    adapter_command,
+    clean_shell_environment,
     expand_home,
     integration_coverage,
     read_data_lines,
     source_line_for_nu,
 )
+from .runtime import collect_runtime_report
 
 
 @dataclass(frozen=True)
@@ -68,46 +70,6 @@ def _run(
     )
 
 
-def _clean_environment(context: Context, ssh: bool = False) -> dict[str, str]:
-    path = ":".join(
-        [
-            "/opt/homebrew/bin",
-            "/usr/local/bin",
-            "/usr/bin",
-            "/bin",
-            "/usr/sbin",
-            "/sbin",
-            str(context.home / ".local" / "bin"),
-            str(context.home / ".cargo" / "bin"),
-        ]
-    )
-    environment = {
-        "HOME": str(context.home),
-        "LOGNAME": os.environ.get("LOGNAME", context.home.name),
-        "PATH": path,
-        "SHELL": "/bin/zsh",
-        "TERM": "xterm-256color",
-        "USER": os.environ.get("USER", context.home.name),
-    }
-    if ssh:
-        environment["SSH_CONNECTION"] = "127.0.0.1 1 127.0.0.1 2"
-    return environment
-
-
-def _adapter_command(context: Context, shell: str, body: str) -> list[str]:
-    adapter = (
-        context.shell_root
-        / "adapters"
-        / {"fish": "fish.fish", "zsh": "zsh.zsh", "nu": "nu.nu"}[shell]
-    )
-    quoted = shlex.quote(str(adapter))
-    if shell == "fish":
-        return ["fish", "--no-config", "-c", f"source {quoted}; {body}"]
-    if shell == "zsh":
-        return ["zsh", "-dfc", f"source {quoted}; {body}"]
-    return ["nu", "--no-config-file", "-c", f"source {quoted}; {body}"]
-
-
 def _environment_values(
     context: Context, shell: str, keys: list[str]
 ) -> list[str] | None:
@@ -128,8 +90,8 @@ def _environment_values(
             "| to json --raw"
         )
     result = _run(
-        _adapter_command(context, shell, body),
-        environment=_clean_environment(context),
+        adapter_command(context, shell, body),
+        environment=clean_shell_environment(context),
         cwd=context.repo,
     )
     if result.returncode != 0:
@@ -150,8 +112,8 @@ def _path_values(context: Context, shell: str) -> list[str] | None:
         "nu": "$env.PATH | to json --raw",
     }[shell]
     result = _run(
-        _adapter_command(context, shell, body),
-        environment=_clean_environment(context),
+        adapter_command(context, shell, body),
+        environment=clean_shell_environment(context),
         cwd=context.repo,
     )
     if result.returncode != 0:
@@ -173,7 +135,7 @@ def _check_startup(context: Context, shell: str) -> Check:
     }
     result = _run(
         commands[shell],
-        environment=_clean_environment(context),
+        environment=clean_shell_environment(context),
         cwd=context.repo,
     )
     if result.returncode == 0:
@@ -189,8 +151,8 @@ def _check_editor(context: Context, shell: str, ssh: bool) -> Check:
         "nu": "print $env.EDITOR",
     }[shell]
     result = _run(
-        _adapter_command(context, shell, body),
-        environment=_clean_environment(context, ssh=ssh),
+        adapter_command(context, shell, body),
+        environment=clean_shell_environment(context, ssh=ssh),
         cwd=context.repo,
     )
     profile = "ssh" if ssh else "local"
@@ -214,8 +176,8 @@ def _check_required_command(context: Context, shell: str, command: str) -> Check
         "nu": f"if ((which {json.dumps(command)}) | is-empty) {{ exit 1 }}",
     }[shell]
     result = _run(
-        _adapter_command(context, shell, body),
-        environment=_clean_environment(context),
+        adapter_command(context, shell, body),
+        environment=clean_shell_environment(context),
         cwd=context.repo,
     )
     status = "pass" if result.returncode == 0 else "fail"
@@ -279,6 +241,7 @@ def run_doctor(context: Context) -> DoctorReport:
         context.shell_root / "adapters" / "fish.fish",
         context.shell_root / "adapters" / "zsh.zsh",
         context.shell_root / "adapters" / "nu.nu",
+        context.runtime_ownership_file,
     ]
     missing = [
         str(path.relative_to(context.repo))
@@ -294,6 +257,31 @@ def run_doctor(context: Context) -> DoctorReport:
     )
     if missing:
         return DoctorReport(checks)
+
+    try:
+        runtime_report = collect_runtime_report(context)
+    except RuntimeError as error:
+        checks.append(Check("fail", "runtime ownership", str(error)))
+        checks.append(
+            Check("fail", "runtime shadow visibility", "ownership report unavailable")
+        )
+    else:
+        checks.append(
+            Check(
+                "pass",
+                "runtime ownership",
+                "shadow-validation declarations are valid",
+            )
+        )
+        checks.append(
+            Check(
+                "warn" if runtime_report.warnings else "pass",
+                "runtime shadow visibility",
+                f"{len(runtime_report.warnings)} unresolved observations"
+                if runtime_report.warnings
+                else "no path conflicts observed",
+            )
+        )
 
     invalid_keys = [
         path.name

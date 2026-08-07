@@ -26,6 +26,7 @@ from .core import (
     validate_integration_name,
 )
 from .doctor import run_doctor
+from .runtime import collect_runtime_report
 
 
 def _print(value: str) -> None:
@@ -394,6 +395,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     commands.add_parser("doctor", help="validate cross-shell behavior")
     commands.add_parser("status", help="show repository and integration status")
+    commands.add_parser(
+        "runtime", help="inspect shadow runtime ownership"
+    ).add_subparsers(dest="runtime_command", required=True).add_parser(
+        "status", help="resolve runtime paths without running runtimes"
+    )
 
     path = commands.add_parser(
         "path", help="manage shared PATH entries"
@@ -463,6 +469,10 @@ def dispatch(arguments: argparse.Namespace, context: Context) -> int:
         return 1 if report.failed else 0
     if arguments.command == "status":
         return _status(context, arguments.json)
+    if arguments.command == "runtime":
+        report = collect_runtime_report(context)
+        _print(report.render(as_json=arguments.json))
+        return 0
     if arguments.command == "path":
         if arguments.path_command == "list":
             return _path_list(context, arguments.json)

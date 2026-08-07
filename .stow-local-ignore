@@ -8,5 +8,6 @@ README.*
 ^\.ruff_cache
 
 # Machine-local state and credentials
+^\.steward
 (^|/)secrets\..*
 (^|/)history\..*

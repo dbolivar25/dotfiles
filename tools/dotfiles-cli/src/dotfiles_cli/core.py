@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shlex
 import shutil
 import stat
 import tempfile
@@ -58,6 +59,10 @@ class Context:
     @property
     def nu_adapter(self) -> Path:
         return self.shell_root / "adapters" / "nu.nu"
+
+    @property
+    def runtime_ownership_file(self) -> Path:
+        return self.shell_root / "runtime-ownership.toml"
 
 
 @dataclass(frozen=True)
@@ -200,3 +205,39 @@ def integration_coverage(directory: Path) -> dict[str, str]:
 
 def source_line_for_nu(name: str) -> str:
     return f"source ~/.config/shell/integrations/{name}/nu.nu"
+
+
+def clean_shell_environment(context: Context, ssh: bool = False) -> dict[str, str]:
+    path = ":".join(
+        [
+            "/opt/homebrew/bin",
+            "/usr/local/bin",
+            "/usr/bin",
+            "/bin",
+            "/usr/sbin",
+            "/sbin",
+            str(context.home / ".local" / "bin"),
+            str(context.home / ".cargo" / "bin"),
+        ]
+    )
+    environment = {
+        "HOME": str(context.home),
+        "LOGNAME": os.environ.get("LOGNAME", context.home.name),
+        "PATH": path,
+        "SHELL": "/bin/zsh",
+        "TERM": "xterm-256color",
+        "USER": os.environ.get("USER", context.home.name),
+    }
+    if ssh:
+        environment["SSH_CONNECTION"] = "127.0.0.1 1 127.0.0.1 2"
+    return environment
+
+
+def adapter_command(context: Context, shell: str, body: str) -> list[str]:
+    adapter = context.shell_root / "adapters" / SHELL_ADAPTERS[shell]
+    quoted = shlex.quote(str(adapter))
+    if shell == "fish":
+        return ["fish", "--no-config", "-c", f"source {quoted}; {body}"]
+    if shell == "zsh":
+        return ["zsh", "-dfc", f"source {quoted}; {body}"]
+    return ["nu", "--no-config-file", "-c", f"source {quoted}; {body}"]
