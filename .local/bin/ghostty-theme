@@ -21,12 +21,25 @@ acquire_lock() {
   trap '/bin/rm -f "$lock_file"' EXIT
 }
 
+write_path() {
+  local path="$1"
+
+  if [[ -L "$path" ]]; then
+    realpath "$path"
+  else
+    printf '%s\n' "$path"
+  fi
+}
+
 write_atomic() {
   local path="$1"
+  local write_target
   local tmp
-  tmp="$(mktemp "${path}.tmp.XXXXXX")"
+
+  write_target="$(write_path "$path")"
+  tmp="$(mktemp "${write_target}.tmp.XXXXXX")"
   cat >"$tmp"
-  mv "$tmp" "$path"
+  mv "$tmp" "$write_target"
 }
 
 reload_ghostty() {
@@ -54,6 +67,7 @@ sync_herdr() {
   local herdr_bin
   local tmp
   local config_mode
+  local write_target
 
   herdr_bin="${HERDR_BIN:-$HOME/.local/bin/herdr}"
   if [[ ! -x "$herdr_bin" ]]; then
@@ -77,8 +91,9 @@ sync_herdr() {
       ;;
   esac
 
-  tmp="$(mktemp "${herdr_config}.tmp.XXXXXX")"
-  config_mode="$(stat -f '%Lp' "$herdr_config")"
+  write_target="$(write_path "$herdr_config")"
+  tmp="$(mktemp "${write_target}.tmp.XXXXXX")"
+  config_mode="$(stat -L -f '%Lp' "$herdr_config")"
 
   awk -v selected_theme="$herdr_theme" '
     function emit_missing_theme_keys() {
@@ -143,11 +158,9 @@ sync_herdr() {
 
   chmod "$config_mode" "$tmp"
   HERDR_CONFIG_PATH="$tmp" "$herdr_bin" config check >/dev/null
-  mv "$tmp" "$herdr_config"
+  mv "$tmp" "$write_target"
 
-  if "$herdr_bin" status server >/dev/null 2>&1; then
-    "$herdr_bin" server reload-config >/dev/null
-  fi
+  "$herdr_bin" server reload-config >/dev/null 2>&1 || true
 }
 
 sync_hunk() {
@@ -156,6 +169,7 @@ sync_hunk() {
   local hunk_config
   local tmp
   local config_mode
+  local write_target
 
   hunk_config="${HUNK_CONFIG_PATH:-${XDG_CONFIG_HOME:-$HOME/.config}/hunk/config.toml}"
   if [[ ! -f "$hunk_config" ]]; then
@@ -171,8 +185,9 @@ sync_hunk() {
       ;;
   esac
 
-  tmp="$(mktemp "${hunk_config}.tmp.XXXXXX")"
-  config_mode="$(stat -f '%Lp' "$hunk_config")"
+  write_target="$(write_path "$hunk_config")"
+  tmp="$(mktemp "${write_target}.tmp.XXXXXX")"
+  config_mode="$(stat -L -f '%Lp' "$hunk_config")"
 
   awk -v selected_theme="$hunk_theme" '
     BEGIN {
@@ -207,7 +222,7 @@ sync_hunk() {
   ' "$hunk_config" >"$tmp"
 
   chmod "$config_mode" "$tmp"
-  mv "$tmp" "$hunk_config"
+  mv "$tmp" "$write_target"
 }
 
 if [[ "$#" -ne 1 || ( "$1" != "light" && "$1" != "dark" ) ]]; then
