@@ -4,22 +4,13 @@ import json
 import os
 import re
 import shlex
-import shutil
 import stat
 import tempfile
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 ENVIRONMENT_KEY = re.compile(r"^[A-Z_][A-Z0-9_]*$")
-INTEGRATION_NAME = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 SHELLS = ("bash", "fish", "zsh", "nu")
-SHELL_ADAPTERS = {
-    "bash": "bash.bash",
-    "fish": "fish.fish",
-    "zsh": "zsh.zsh",
-    "nu": "nu.nu",
-}
-SHELL_MARKERS = ("native", "unsupported", "deferred")
 
 
 class DotfilesError(RuntimeError):
@@ -46,32 +37,28 @@ class Context:
         return self.repo / ".config" / "shell"
 
     @property
-    def paths_file(self) -> Path:
-        return self.shell_root / "paths"
+    def shell_manifest(self) -> Path:
+        return self.shell_root / "shell.toml"
 
     @property
-    def environment_dir(self) -> Path:
-        return self.shell_root / "environment.d"
+    def native_dir(self) -> Path:
+        return self.shell_root / "native"
 
     @property
-    def secrets_dir(self) -> Path:
-        return self.shell_root / "secrets.d"
+    def private_shell_manifest(self) -> Path:
+        return self.home / ".config" / "dotfiles" / "shell.local.toml"
 
     @property
-    def integrations_dir(self) -> Path:
-        return self.shell_root / "integrations"
+    def shell_state_dir(self) -> Path:
+        return self.home / ".local" / "state" / "dotfiles" / "shell"
 
     @property
-    def nu_adapter(self) -> Path:
-        return self.shell_root / "adapters" / "nu.nu"
+    def shell_v2_dir(self) -> Path:
+        return self.shell_state_dir / "v2"
 
     @property
-    def runtime_ownership_file(self) -> Path:
-        return self.shell_root / "runtime-ownership.toml"
-
-    @property
-    def mise_config_file(self) -> Path:
-        return self.repo / ".config" / "mise" / "config.toml"
+    def active_shell_dir(self) -> Path:
+        return self.shell_v2_dir / "current"
 
 
 @dataclass(frozen=True)
@@ -119,55 +106,8 @@ def validate_environment_key(key: str) -> str:
     return key
 
 
-def validate_integration_name(name: str) -> str:
-    if not INTEGRATION_NAME.fullmatch(name):
-        raise DotfilesError(f"invalid integration name: {name}")
-    return name
-
-
-def normalize_path_entry(value: str, home: Path) -> str:
-    value = value.strip()
-    if not value:
-        raise DotfilesError("PATH entry cannot be empty")
-    home_string = str(home)
-    if value == home_string:
-        return "${HOME}"
-    if value.startswith(f"{home_string}/"):
-        return "${HOME}" + value[len(home_string) :]
-    if value == "~":
-        return "${HOME}"
-    if value.startswith("~/"):
-        return "${HOME}/" + value[2:]
-    if not value.startswith(("/", "${HOME}/")):
-        raise DotfilesError("PATH entry must be absolute or home-relative")
-    return value.rstrip("/") or "/"
-
-
 def expand_home(value: str, home: Path) -> str:
     return value.replace("${HOME}", str(home))
-
-
-def read_data_lines(path: Path) -> list[str]:
-    if not path.exists():
-        return []
-    return [
-        line.strip()
-        for line in path.read_text().splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
-    ]
-
-
-def update_data_lines(path: Path, values: list[str]) -> str:
-    comments: list[str] = []
-    if path.exists():
-        for line in path.read_text().splitlines():
-            if line.lstrip().startswith("#") or not line.strip():
-                comments.append(line)
-            else:
-                break
-    prefix = "\n".join(comments).rstrip()
-    body = "\n".join(values)
-    return f"{prefix}\n{body}\n" if prefix else f"{body}\n"
 
 
 def atomic_write(path: Path, content: str, mode: int | None = None) -> None:
@@ -187,33 +127,6 @@ def atomic_write(path: Path, content: str, mode: int | None = None) -> None:
     finally:
         if temporary.exists():
             temporary.unlink()
-
-
-def remove_path(path: Path) -> None:
-    if path.is_dir() and not path.is_symlink():
-        shutil.rmtree(path)
-    elif path.exists() or path.is_symlink():
-        path.unlink()
-
-
-def integration_coverage(directory: Path) -> dict[str, str]:
-    coverage: dict[str, str] = {}
-    for shell in SHELLS:
-        adapter = directory / SHELL_ADAPTERS[shell]
-        if adapter.is_file():
-            coverage[shell] = "adapter"
-            continue
-        for marker in SHELL_MARKERS:
-            if (directory / f"{shell}.{marker}").is_file():
-                coverage[shell] = marker
-                break
-        else:
-            coverage[shell] = "missing"
-    return coverage
-
-
-def source_line_for_nu(name: str) -> str:
-    return f"source ~/.config/shell/integrations/{name}/nu.nu"
 
 
 def clean_shell_environment(context: Context, ssh: bool = False) -> dict[str, str]:
@@ -242,15 +155,24 @@ def clean_shell_environment(context: Context, ssh: bool = False) -> dict[str, st
     return environment
 
 
-def adapter_command(context: Context, shell: str, body: str) -> list[str]:
-    adapter = context.shell_root / "adapters" / SHELL_ADAPTERS[shell]
-    quoted = shlex.quote(str(adapter))
+def shell_probe_command(context: Context, shell: str, body: str) -> list[str]:
+    public = context.active_shell_dir / "public"
     if shell == "bash":
+        quoted = shlex.quote(str(public / "bash" / "init.bash"))
         return ["/bin/bash", "--noprofile", "--norc", "-c", f". {quoted}; {body}"]
     if shell == "fish":
+        quoted = shlex.quote(str(public / "fish" / "init.fish"))
         return ["fish", "--no-config", "-c", f"source {quoted}; {body}"]
     if shell == "zsh":
+        quoted = shlex.quote(str(public / "zsh" / "init.zsh"))
         return ["zsh", "-dfc", f"source {quoted}; {body}"]
     if shell == "nu":
-        return ["nu", "--no-config-file", "-c", f"source {quoted}; {body}"]
+        env = json.dumps(str(public / "nu" / "env.nu"))
+        config = json.dumps(str(public / "nu" / "config.nu"))
+        return [
+            "nu",
+            "--no-config-file",
+            "-c",
+            f"source {env}; source {config}; {body}",
+        ]
     raise DotfilesError(f"unsupported shell: {shell}")

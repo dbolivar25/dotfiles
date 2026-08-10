@@ -1,8 +1,11 @@
-# Shared environment, behavior contracts, and registered integrations.
-source "$HOME/.config/shell/adapters/zsh.zsh"
-
-# Cargo may add toolchain-specific environment beyond the shared PATH.
-[[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
+# Shared environment and commands compiled by `dotfiles shell apply`.
+_dotfiles_shell_image="$HOME/.local/state/dotfiles/shell/v2/current/public/zsh/init.zsh"
+if [[ -r "$_dotfiles_shell_image" ]]; then
+  source "$_dotfiles_shell_image"
+else
+  print -u2 'dotfiles: shell image missing; run `dotfiles shell apply`'
+fi
+unset _dotfiles_shell_image
 
 # Keep Fish as the interactive shell for SSH sessions while Zsh remains the
 # POSIX-compatible login shell.

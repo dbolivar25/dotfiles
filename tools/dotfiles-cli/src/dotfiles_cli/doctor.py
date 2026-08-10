@@ -8,17 +8,18 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from .core import (
-    ENVIRONMENT_KEY,
     SHELLS,
     Context,
-    adapter_command,
     clean_shell_environment,
     expand_home,
-    integration_coverage,
-    read_data_lines,
-    source_line_for_nu,
+    shell_probe_command,
 )
-from .runtime import collect_runtime_report
+from .shell_image import (
+    ShellConfig,
+    collect_shell_image_checks,
+    load_private_secrets,
+    load_shell_config,
+)
 
 
 @dataclass(frozen=True)
@@ -85,7 +86,10 @@ def _environment_values(
         )
     elif shell == "fish":
         joined = " ".join(keys)
-        body = f"for key in {joined}; set -q $key; and printf '%s' $$key; printf '\\0'; end"
+        body = (
+            f"for key in {joined}; set -q $key; and printf '%s' $$key; "
+            "printf '\\0'; end"
+        )
     else:
         quoted_keys = " ".join(json.dumps(key) for key in keys)
         body = (
@@ -93,7 +97,7 @@ def _environment_values(
             "| to json --raw"
         )
     result = _run(
-        adapter_command(context, shell, body),
+        shell_probe_command(context, shell, body),
         environment=clean_shell_environment(context),
         cwd=context.repo,
     )
@@ -117,7 +121,7 @@ def _path_values(context: Context, shell: str) -> list[str] | None:
         "nu": "$env.PATH | to json --raw",
     }[shell]
     result = _run(
-        adapter_command(context, shell, body),
+        shell_probe_command(context, shell, body),
         environment=clean_shell_environment(context),
         cwd=context.repo,
     )
@@ -153,9 +157,7 @@ def _check_startup(context: Context, shell: str) -> Check:
         ]
         if all(result.returncode == 0 for result in results):
             return Check(
-                "pass",
-                "bash startup",
-                "clean login and non-login startup succeeded",
+                "pass", "bash startup", "clean login and non-login startup succeeded"
             )
         errors = [
             line
@@ -179,7 +181,9 @@ def _check_startup(context: Context, shell: str) -> Check:
     return Check("fail", f"{shell} startup", error[-1] if error else "startup failed")
 
 
-def _check_editor(context: Context, shell: str, ssh: bool) -> Check:
+def _check_editor(
+    context: Context, config: ShellConfig, shell: str, ssh: bool
+) -> Check:
     body = {
         "bash": "printf '%s\\n' \"$EDITOR\"",
         "zsh": "print -r -- $EDITOR",
@@ -187,14 +191,12 @@ def _check_editor(context: Context, shell: str, ssh: bool) -> Check:
         "nu": "print $env.EDITOR",
     }[shell]
     result = _run(
-        adapter_command(context, shell, body),
+        shell_probe_command(context, shell, body),
         environment=clean_shell_environment(context, ssh=ssh),
         cwd=context.repo,
     )
     profile = "ssh" if ssh else "local"
-    expected = (
-        (context.shell_root / "behavior" / "editor" / profile).read_text().strip()
-    )
+    expected = config.editor_ssh if ssh else config.editor_local
     actual = result.stdout.decode().strip()
     if result.returncode == 0 and actual == expected:
         return Check("pass", f"{shell} editor ({profile})", actual)
@@ -213,7 +215,7 @@ def _check_required_command(context: Context, shell: str, command: str) -> Check
         "nu": f"if ((which {json.dumps(command)}) | is-empty) {{ exit 1 }}",
     }[shell]
     result = _run(
-        adapter_command(context, shell, body),
+        shell_probe_command(context, shell, body),
         environment=clean_shell_environment(context),
         cwd=context.repo,
     )
@@ -222,23 +224,24 @@ def _check_required_command(context: Context, shell: str, command: str) -> Check
     return Check(status, f"{shell} command {command}", detail)
 
 
-def _check_shared_environment(context: Context, checks: list[Check]) -> None:
-    public_files = sorted(
-        path for path in context.environment_dir.glob("*") if path.is_file()
-    )
-    secret_files = sorted(
-        path for path in context.secrets_dir.glob("*") if path.is_file()
-    )
-    files = public_files + secret_files
-    keys = [path.name for path in files]
-    expected = [
-        path.read_text().rstrip("\n").replace("${HOME}", str(context.home))
-        for path in files
-    ]
-    expected_hashes = [hashlib.sha256(value.encode()).hexdigest() for value in expected]
+def _check_shared_environment(
+    context: Context,
+    config: ShellConfig,
+    secrets: dict[str, str],
+    checks: list[Check],
+) -> None:
+    values = {
+        key: expand_home(value, context.home)
+        for key, value in config.environment.items()
+    }
+    values.update(secrets)
+    keys = sorted(values)
+    expected_hashes = {
+        key: hashlib.sha256(values[key].encode()).hexdigest() for key in keys
+    }
     for shell in SHELLS:
-        values = _environment_values(context, shell, keys)
-        if values is None or len(values) != len(keys):
+        actual_values = _environment_values(context, shell, keys)
+        if actual_values is None or len(actual_values) != len(keys):
             checks.append(
                 Check(
                     "fail",
@@ -247,12 +250,11 @@ def _check_shared_environment(context: Context, checks: list[Check]) -> None:
                 )
             )
             continue
-        hashes = [hashlib.sha256(value.encode()).hexdigest() for value in values]
-        mismatches = [
-            key
-            for key, wanted, actual in zip(keys, expected_hashes, hashes)
-            if wanted != actual
-        ]
+        actual_hashes = {
+            key: hashlib.sha256(value.encode()).hexdigest()
+            for key, value in zip(keys, actual_values, strict=True)
+        }
+        mismatches = [key for key in keys if expected_hashes[key] != actual_hashes[key]]
         if mismatches:
             checks.append(
                 Check(
@@ -271,77 +273,32 @@ def _check_shared_environment(context: Context, checks: list[Check]) -> None:
 
 def run_doctor(context: Context) -> DoctorReport:
     checks: list[Check] = []
-
-    required_files = [
-        context.paths_file,
-        context.shell_root / "required-commands",
-        context.shell_root / "adapters" / "bash.bash",
-        context.shell_root / "adapters" / "fish.fish",
-        context.shell_root / "adapters" / "zsh.zsh",
-        context.shell_root / "adapters" / "nu.nu",
-        context.runtime_ownership_file,
-    ]
+    required_files = [context.shell_manifest, context.native_dir]
     missing = [
         str(path.relative_to(context.repo))
         for path in required_files
-        if not path.is_file()
+        if not path.exists()
     ]
     checks.append(
         Check(
             "fail" if missing else "pass",
-            "shell module",
-            f"missing: {', '.join(missing)}" if missing else "required files exist",
+            "shell source",
+            f"missing: {', '.join(missing)}"
+            if missing
+            else "manifest and native source exist",
         )
     )
     if missing:
         return DoctorReport(checks)
 
-    try:
-        runtime_report = collect_runtime_report(context)
-    except RuntimeError as error:
-        checks.append(Check("fail", "runtime ownership", str(error)))
-        checks.append(
-            Check("fail", "runtime shadow visibility", "ownership report unavailable")
-        )
-    else:
-        checks.append(
-            Check(
-                "pass",
-                "runtime ownership",
-                "shadow-validation declarations are valid",
-            )
-        )
-        checks.append(
-            Check(
-                "warn" if runtime_report.warnings else "pass",
-                "runtime shadow visibility",
-                f"{len(runtime_report.warnings)} unresolved observations"
-                if runtime_report.warnings
-                else "no path conflicts observed",
-            )
-        )
-
-    invalid_keys = [
-        path.name
-        for path in context.environment_dir.glob("*")
-        if path.is_file() and not ENVIRONMENT_KEY.fullmatch(path.name)
-    ]
-    checks.append(
-        Check(
-            "fail" if invalid_keys else "pass",
-            "environment keys",
-            f"invalid: {', '.join(invalid_keys)}"
-            if invalid_keys
-            else "all names are valid",
-        )
-    )
-
-    entries = read_data_lines(context.paths_file)
+    config = load_shell_config(context)
+    secrets = load_private_secrets(context)
+    entries = list(config.paths)
     duplicates = sorted({entry for entry in entries if entries.count(entry) > 1})
     checks.append(
         Check(
             "fail" if duplicates else "pass",
-            "PATH duplicates",
+            "PATH source duplicates",
             f"duplicate: {', '.join(duplicates)}" if duplicates else "none",
         )
     )
@@ -357,79 +314,21 @@ def run_doctor(context: Context) -> DoctorReport:
             f"missing: {', '.join(absent)}" if absent else "all exist",
         )
     )
+    checks.extend(Check(*values) for values in collect_shell_image_checks(context))
+    if any(check.status == "fail" for check in checks):
+        return DoctorReport(checks)
 
-    ignored_probe = context.secrets_dir / "_doctor_probe"
-    ignored = (
-        subprocess.run(
-            ["git", "check-ignore", "-q", str(ignored_probe)],
-            cwd=context.repo,
-            check=False,
-        ).returncode
-        == 0
-    )
-    checks.append(
-        Check(
-            "pass" if ignored else "fail",
-            "secret Git ignore",
-            "secrets.d is ignored" if ignored else "secrets.d is not ignored",
-        )
-    )
-    insecure = [
-        path.name
-        for path in context.secrets_dir.glob("*")
-        if path.is_file() and (path.stat().st_mode & 0o077)
+    wanted_paths = [
+        expand_home(entry, context.home)
+        for entry in entries
+        if Path(expand_home(entry, context.home)).is_dir()
     ]
-    checks.append(
-        Check(
-            "fail" if insecure else "pass",
-            "secret permissions",
-            f"not mode 0600: {', '.join(insecure)}" if insecure else "private",
-        )
-    )
-    if context.secrets_dir.exists():
-        directory_private = (context.secrets_dir.stat().st_mode & 0o077) == 0
-        checks.append(
-            Check(
-                "pass" if directory_private else "fail",
-                "secret directory permissions",
-                "private" if directory_private else "expected mode 0700",
-            )
-        )
-
-    nu_adapter_text = context.nu_adapter.read_text()
-    for directory in sorted(
-        path for path in context.integrations_dir.glob("*") if path.is_dir()
-    ):
-        coverage = integration_coverage(directory)
-        missing_shells = [
-            shell for shell, state in coverage.items() if state == "missing"
-        ]
-        status = "fail" if missing_shells else "pass"
-        detail = ", ".join(f"{shell}={state}" for shell, state in coverage.items())
-        checks.append(Check(status, f"integration {directory.name}", detail))
-        if coverage["nu"] == "adapter":
-            source_line = source_line_for_nu(directory.name)
-            checks.append(
-                Check(
-                    "pass" if source_line in nu_adapter_text else "fail",
-                    f"integration {directory.name} Nushell load",
-                    "registered"
-                    if source_line in nu_adapter_text
-                    else "source line missing",
-                )
-            )
-
     for shell in SHELLS:
         checks.append(_check_startup(context, shell))
-        checks.append(_check_editor(context, shell, ssh=False))
-        checks.append(_check_editor(context, shell, ssh=True))
+        checks.append(_check_editor(context, config, shell, ssh=False))
+        checks.append(_check_editor(context, config, shell, ssh=True))
 
         actual_paths = _path_values(context, shell)
-        wanted_paths = [
-            expand_home(entry, context.home)
-            for entry in entries
-            if Path(expand_home(entry, context.home)).is_dir()
-        ]
         if actual_paths is None:
             checks.append(Check("fail", f"{shell} PATH", "could not read PATH"))
         else:
@@ -460,10 +359,8 @@ def run_doctor(context: Context) -> DoctorReport:
                     )
                 )
 
-    _check_shared_environment(context, checks)
-
-    for command in read_data_lines(context.shell_root / "required-commands"):
+    _check_shared_environment(context, config, secrets, checks)
+    for command in config.required_commands:
         for shell in SHELLS:
             checks.append(_check_required_command(context, shell, command))
-
     return DoctorReport(checks)

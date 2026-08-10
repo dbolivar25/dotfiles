@@ -1,0 +1,139 @@
+schema = 1
+
+# Shared values compile to native shell syntax; stateful behavior stays in native/.
+# Run `dotfiles shell apply` after editing; shell startup never parses this file.
+# Highest precedence first. Missing directories are skipped when a shell starts.
+paths = [
+  "${HOME}/.local/bin",
+  "${HOME}/.local/share/mise/shims",
+  "${HOME}/.opencode/bin",
+  "${HOME}/.bun/bin",
+  "${HOME}/.cargo/bin",
+  "/Library/TeX/texbin",
+  "/usr/local/bin",
+  "/opt/homebrew/bin",
+  "/opt/homebrew/sbin",
+]
+
+required_commands = ["amp", "git", "nvim", "ruby", "uv"]
+
+[environment]
+BAT_THEME = "base16"
+BUN_INSTALL = "${HOME}/.bun"
+FZF_DEFAULT_OPTS = '''--tmux 70%
+--color=fg:#908caa,bg:#191724,hl:#ebbcba
+--color=fg+:#e0def4,bg+:#26233a,hl+:#ebbcba
+--color=border:#403d52,header:#31748f,gutter:#191724
+--color=spinner:#f6c177,info:#9ccfd8
+--color=pointer:#c4a7e7,marker:#eb6f92,prompt:#908caa'''
+VIRTUAL_ENV_DISABLE_PROMPT = "1"
+XDG_CONFIG_HOME = "${HOME}/.config"
+
+[editor]
+local = "nvim"
+ssh = "vim"
+
+[shortcuts]
+cgb = "cargo build"
+cgbb = "cargo build --bin"
+cgbr = "cargo build --release"
+cgbrb = "cargo build --release --bin"
+cgr = "cargo run"
+cgrb = "cargo run --bin"
+cgrr = "cargo run --release"
+cgrrb = "cargo run --release --bin"
+cgt = "cargo test"
+cinema = "asciinema"
+cl = "claude"
+clb = "cargo lambda build"
+clbr = "cargo lambda build --release"
+cld = "clauded"
+clr = "cargo lambda run"
+clrr = "cargo lambda run --release"
+clt = "cargo lambda test"
+dkr = "docker"
+dkrc = "docker compose"
+fenv = { expansion = "env | rg", shells = ["bash", "fish", "zsh"] }
+ff = "fastfetch"
+gad = "git add"
+gbr = "git branch"
+gcm = "git commit"
+gdf = "git diff"
+gg = "lazygit"
+gmr = "git merge"
+gpl = "git pull"
+gplr = "git pull --rebase"
+gpsh = "git push"
+grs = "git restore"
+gst = "git status"
+gsw = "git switch"
+hd = "herdr"
+ipy = "ipython"
+j = "just"
+jg = "just --justfile ~/.config/just/justfile --working-directory ."
+ktl = "kubectl"
+ktla = "kubectl apply -f"
+ktld = "kubectl delete"
+ktlg = "kubectl get"
+ktll = "kubectl logs"
+ktls = "kubectl scale"
+ktlx = "kubectl exec"
+"l." = "l -a"
+lD = "ls -lD"
+lT = "lt --level"
+la = "ls -la"
+laD = "ls -lDa"
+laf = "ls -lfa"
+lf = "ls -lf"
+ll = "ll -l"
+llD = "ll -lD"
+lla = "ll -la"
+llaD = "ll -lDa"
+llaf = "ll -lfa"
+llf = "ll -lf"
+ls = { expansion = "ls -l", shells = ["bash", "fish", "zsh"] }
+man = "batman"
+md = "docling"
+mkd = "mkdir"
+nrc = { expansion = "pushd ~/.config/nvim && nvim && popd", shells = ["bash", "fish", "zsh"] }
+oc = "opencode"
+pa = "prime-agent"
+py = "python3"
+rc = { expansion = "pushd ~/.config/shell && nvim && popd", shells = ["bash", "fish", "zsh"] }
+src = { expansion = "pushd ~/.ssh && nvim && popd", shells = ["bash", "fish", "zsh"] }
+trc = { expansion = "pushd ~/.config/ghostty && nvim && popd", shells = ["bash", "fish", "zsh"] }
+trs = "tmux rename-session"
+vi = "nvim"
+vim = "nvim"
+x = "exec"
+
+[forwarders.l]
+argv = ["eza", "--color=always", "--group-directories-first", "--classify"]
+description = "List directory contents with short format"
+
+[forwarders.ll]
+argv = ["eza", "--color=always", "--group-directories-first", "--no-user", "--git", "--git-repos", "--links"]
+description = "List directory contents with long format"
+
+[forwarders.ls]
+argv = ["eza", "--color=always", "--group-directories-first", "--no-user", "--time-style=relative"]
+description = "List directory contents"
+shells = ["bash", "fish", "zsh"]
+
+[forwarders.lt]
+argv = ["eza", "--color=always", "--group-directories-first", "--git-ignore", "--tree"]
+description = "List directory contents as a tree"
+
+[forwarders.clauded]
+argv = ["claude", "--dangerously-skip-permissions"]
+description = "Run Claude with the --dangerously-skip-permissions flag"
+
+[integrations.starship]
+bash = ["starship", "init", "bash", "--print-full-init"]
+zsh = ["starship", "init", "zsh"]
+
+[integrations.zoxide]
+bash = ["zoxide", "init", "bash", "--cmd", "cd"]
+fish = ["zoxide", "init", "fish", "--cmd", "cd"]
+zsh = ["zoxide", "init", "zsh", "--cmd", "cd"]
+nu = ["zoxide", "init", "nushell", "--cmd", "cd"]

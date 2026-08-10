@@ -1,8 +1,8 @@
 # Dotfiles
 
-Personal configuration for macOS, managed as a single GNU Stow package. The
-repository lives at `~/dotfiles`; Stow links its contents into `~` without
-turning the home directory into a Git repository.
+Personal macOS configuration managed as one GNU Stow package. The repository
+lives at `~/dotfiles`; Stow links its contents into `~` without turning the home
+directory into a Git repository.
 
 ## Bootstrap
 
@@ -14,58 +14,75 @@ dotfiles stow --apply
 dotfiles doctor
 ```
 
-The CLI runs in dry mode by default. Every state-changing command requires an
-explicit `--apply`; read-only commands such as `doctor`, `status`, and `list`
-run immediately.
+Preview-oriented commands remain dry by default. `dotfiles shell apply` and
+`dotfiles shell rollback` are deliberately explicit verbs and run immediately.
 
 ## Shared shell configuration
 
-Zsh remains the login shell, Fish is the primary interactive shell, Bash is a
-compatible fallback, and Nushell remains a native secondary shell. They share
-data and behavior contracts without sharing shell syntax:
+Zsh is the login shell, Fish is the primary interactive shell, Bash is the
+fallback, and Nushell keeps its structured native behavior. Human-edited shell
+source has one shared manifest and a small native escape hatch:
 
 ```text
 .config/shell/
-├── paths                 # Ordered PATH entries
-├── required-commands     # Commands that must resolve in every shell
-├── environment.d/        # One public value per file
-├── secrets.d/            # One ignored private value per file
-├── behavior/             # Cross-shell behavior contracts
-├── runtime-ownership.toml # Runtime ownership intent and migration gates
-├── integrations/         # Tool-local shell adapters and support markers
-└── adapters/             # Bash, Fish, Zsh, and Nushell loaders
+├── shell.toml             # PATH, env, editor, shortcuts, wrappers, generators
+└── native/
+    ├── bash.bash
+    ├── zsh.zsh
+    ├── nu/config.nu
+    └── fish/functions/    # Fish-native autoload files
 ```
 
-Fish and Nushell retain their native prompts; Bash and Zsh use Starship. Editor
-selection is shared behavior: `nvim` locally and `vim` over SSH in all four
-shells. Interactive Bash loads the shared adapter through `.bashrc`; login Bash
-uses `.bash_profile` to load the portable `.profile` boundary first. Scripts
-should use `mise exec` instead of relying on interactive startup hooks.
+`dotfiles shell apply` parses the TOML, copies the native files, prebuilds the
+Starship and Zoxide hooks, syntax-checks every shell, and atomically
+selects one immutable release pair under
+`~/.local/state/dotfiles/shell/v2/`. Shell startup follows one fixed symlink and
+does no discovery, TOML parsing, or code generation. `dotfiles shell rollback`
+atomically swaps the active and rollback releases; running it again moves
+forward again.
+
+Machine-private values have one source file:
+`~/.config/dotfiles/shell.local.toml`. It and its generated state are mode
+`0600`; their directories are mode `0700`. Public generated files are scanned
+for home paths, repository paths, and private values before activation. Nothing
+generated is tracked in Git. Active and rollback releases keep complete private
+state; older releases keep only public Fish autoloads needed by running shells.
+
+Fish gets native abbreviations and autoloaded functions. Bash and Zsh get
+aliases and functions. Nushell keeps its default prompt, structured `ls`, and
+native state-changing commands. The external `jj` command is not shadowed. Bun
+stays on PATH without startup completion work, and Mise is used through shims
+without an activation hook. Mise also reads Node version files and pnpm
+`packageManager` pins, so projects can override the global defaults.
+
+Use `[shortcuts]` in `shell.toml` for textual expansion and `[forwarders]` when
+the behavior is exactly “external executable + fixed arguments + forwarded
+arguments.” Put caller-state behavior such as `cd`, environment mutation,
+virtual-environment activation, prompts, or structured Nu commands in
+`native/`. Put deterministic third-party initialization in `[integrations]`.
 
 ## Common operations
 
 ```sh
-# Preview, then add a PATH entry.
-dotfiles path add ~/.example/bin
-dotfiles path add ~/.example/bin --apply
-
-# Manage public values.
-dotfiles env set EXAMPLE_HOME ~/example
-dotfiles env set EXAMPLE_HOME ~/example --apply
+# Edit public behavior, then validate and activate it.
+nvim ~/.config/shell/shell.toml
+dotfiles shell check
+dotfiles shell apply
 
 # Manage private values without printing them.
 dotfiles secret set EXAMPLE_TOKEN
 dotfiles secret set EXAMPLE_TOKEN --apply
+dotfiles secret unset EXAMPLE_TOKEN
+dotfiles secret unset EXAMPLE_TOKEN --apply
 
-# Create adapters for a tool.
-dotfiles integration init example
-dotfiles integration init example --apply
+# Roll back the active shell image. Run it again to move forward.
+dotfiles shell rollback
 
 # Preview or repair Stow links.
 dotfiles stow
 dotfiles stow --apply
 
-# Verify the entire contract.
+# Verify source, state, startup, and cross-shell behavior.
 dotfiles doctor
 ```
 
@@ -73,55 +90,8 @@ Use global `--json` for automation:
 
 ```sh
 dotfiles --json doctor
-dotfiles --json path add ~/.example/bin
+dotfiles --json status
 ```
-
-## Runtime ownership migration
-
-Runtime consolidation remains in **shadow validation** while activated mise
-runtimes complete their observation windows. The tracked ownership file records
-current owners and remaining retirement gates:
-
-- mise is the configured global owner for Node, Ruby, Go, Elixir, and Erlang;
-  remaining compatibility, observation, and project gates stay explicit.
-- Java is application-owned rather than a global shell runtime: Homebrew-backed
-  launchers provide OpenJDK where needed, and Trader Workstation bundles a JRE.
-- uv owns project-selected Python interpreters; global `python` and `python3`
-  stay outside the runtime inventory. Project-declared uv minimums remain
-  compatibility gates.
-- rustup and OPAM retain specialist ownership. OPAM activates natively in Bash,
-  Fish, and Zsh; Nushell uses `opam exec -- <command>` because OPAM has no
-  native Nu hook. The installed direnv supports Bash, Fish, and Zsh, but not
-  Nushell.
-- GHCup, Bun, and the Microsoft .NET installation remain specialist owners for
-  their existing runtimes.
-- Elixir is retained and is not a pruning candidate. Mise ownership of Elixir
-  and its compatible Erlang/OTP version remains provisional until its tooling
-  and retained projects pass migration checks.
-
-Inspect what each shell resolves without running the inspected runtime
-executables:
-
-```sh
-dotfiles runtime status
-dotfiles --json runtime status
-dotfiles runtime configure
-dotfiles runtime configure --apply
-```
-
-The report classifies path ownership, cross-shell disagreement, legacy
-shadowing, and unresolved migration gates. Existing conflicts are warnings and
-data: this command does not claim ownership is consolidated, enable mise,
-install versions, edit projects, or remove legacy managers. Those changes come
-only after the required versions and representative projects pass parity checks
-in Bash, Fish, Zsh, and Nushell.
-
-`runtime configure` renders `.config/mise/config.toml` only from explicitly
-approved ownership declarations. The current global defaults cover Node `lts`,
-Ruby `3.3.1`, Go `1.23.11`, Elixir `1.19.5-otp-28`, and Erlang `28.5`; project
-version files still take precedence where supported. The command is a dry run
-unless passed `--apply`; it writes configuration only and does not run mise,
-install runtimes, activate mise, or claim that every retirement gate is closed.
 
 ## Installing programs
 
@@ -133,18 +103,16 @@ dotfiles capture -- brew install example
 dotfiles capture --apply -- brew install example
 ```
 
-`capture` previews by default. With `--apply`, it runs the command, reports the
-resulting Git changes, and runs the doctor. Translate installer changes into
-the shared model instead of retaining inline blocks:
+Translate installer changes into `shell.toml` or `native/` instead of retaining
+inline blocks:
 
-- PATH directory: `dotfiles path add`
-- Public value: `dotfiles env set`
+- PATH, public value, shortcut, wrapper, or generator: `shell.toml`
 - Private value: `dotfiles secret set`
-- Initialization hook: `dotfiles integration init`
+- Shell-specific behavior: the corresponding file under `native/`
 
-An integration must have an adapter or an explicit `native`, `unsupported`, or
-`deferred` marker for Bash, Fish, Zsh, and Nushell. Bash adapters must remain
-compatible with the macOS-provided Bash 3.2.
+Generated Bash remains compatible with macOS Bash 3.2. Secret changes rebuild
+an already-active shell image automatically. After a public or native source
+edit, run `dotfiles shell check` and `dotfiles shell apply`.
 
 ## Development
 
@@ -159,13 +127,14 @@ uv run --project tools/dotfiles-cli \
 
 ## Update workflow
 
-1. Change the linked file normally in `~` or edit it directly in `~/dotfiles`.
-2. Review the repository with `git status` and `git diff`.
-3. Run `dotfiles doctor` before committing.
-4. Keep unrelated tools in separate commits so changes remain easy to undo.
+1. Change the linked file normally in `~` or edit it in `~/dotfiles`.
+2. Run `dotfiles shell check` and `dotfiles shell apply` after shell-source edits.
+3. Review `git status` and `git diff`.
+4. Run `dotfiles doctor` before committing.
 
 ## Local state and secrets
 
-Machine-local and generated files are ignored by Git. Shell credentials live
-as mode `0600` files under `.config/shell/secrets.d/`. The doctor compares their
-behavior across shells by hash and never prints their values.
+Shell credentials live in the mode-`0600` file
+`~/.config/dotfiles/shell.local.toml`. Generated releases live outside Git under
+`~/.local/state/dotfiles/shell/v2/`. The doctor compares private behavior across
+shells by hash and never prints values.
