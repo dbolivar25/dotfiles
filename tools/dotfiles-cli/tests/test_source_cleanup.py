@@ -16,10 +16,23 @@ CONTEXT = Context(REPO, Path.home(), REPO)
 
 
 class SourceCleanupTests(unittest.TestCase):
-    def test_authored_shell_tree_has_one_manifest_and_native_source(self) -> None:
+    def test_authored_shell_tree_has_one_manifest_and_three_native_syntaxes(
+        self,
+    ) -> None:
         self.assertEqual(
             {path.name for path in SHELL.iterdir()},
             {"shell.toml", "native"},
+        )
+        native = SHELL / "native"
+        self.assertEqual({path.name for path in native.iterdir()}, {"sh", "nu", "fish"})
+        self.assertEqual(
+            {path.name for path in (native / "sh").iterdir()}, {"functions.sh"}
+        )
+        self.assertEqual(
+            {path.name for path in (native / "nu").iterdir()}, {"commands.nu"}
+        )
+        self.assertTrue(
+            all(path.suffix == ".fish" for path in (native / "fish").iterdir())
         )
 
     def test_manifest_preserves_bun_and_mise_without_activation_hooks(self) -> None:
@@ -103,14 +116,14 @@ class SourceCleanupTests(unittest.TestCase):
             env_config.index("$env.ENV_CONVERSIONS"),
             env_config.index("source ~/.local/state/dotfiles/shell/v2/current"),
         )
-        native = (SHELL / "native/nu/config.nu").read_text()
+        native = (SHELL / "native/nu/commands.nu").read_text()
         self.assertNotIn("alias ls =", native)
         self.assertNotIn("alias jj =", native)
         self.assertEqual(shutil.which("jj"), "/opt/homebrew/bin/jj")
         self.assertFalse((REPO / ".config/nushell/zoxide.nu").exists())
 
     def test_fish_fidgets_and_autoload_sources_are_native(self) -> None:
-        functions = SHELL / "native/fish/functions"
+        functions = SHELL / "native/fish"
         for name in (":q", ":wa", ":wq", ":xa", "load_env", "venv"):
             with self.subTest(name=name):
                 self.assertTrue((functions / f"{name}.fish").is_file())

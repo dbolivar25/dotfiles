@@ -60,7 +60,7 @@ class FishNativeBehaviorTests(unittest.TestCase):
         )
 
     def test_vim_fidgets_keep_exact_source_semantics(self) -> None:
-        functions = REPO / ".config" / "shell" / "native" / "fish" / "functions"
+        functions = REPO / ".config" / "shell" / "native" / "fish"
         expected = {
             ":q": "function :q\n    exit\nend\n",
             ":wa": "function :wa\n\nend\n",

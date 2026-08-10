@@ -1,18 +1,26 @@
-# Shell-native commands that must mutate the calling Bash process.
+# Caller-state functions shared by Bash and Zsh.
 load_env() {
   [ "$#" -le 1 ] || { printf 'Usage: load_env [file]\n' >&2; return 2; }
-  local file=${1:-.env} line key value
+  local file=${1:-.env} line trimmed key value
   [ -f "$file" ] || { printf 'load_env: %s: file not found\n' "$file" >&2; return 1; }
 
   while IFS= read -r line || [ -n "$line" ]; do
-    [[ "$line" =~ ^[[:space:]]*($|#) ]] && continue
-    [[ "$line" == *=* ]] || continue
+    trimmed=${line#"${line%%[![:space:]]*}"}
+    case "$trimmed" in
+      ""|\#*) continue ;;
+    esac
+    case "$line" in
+      *=*) ;;
+      *) continue ;;
+    esac
     key=${line%%=*}
     value=${line#*=}
-    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || {
-      printf 'load_env: invalid name: %s\n' "$key" >&2
-      return 1
-    }
+    case "$key" in
+      ""|[0-9]*|*[!A-Za-z0-9_]*)
+        printf 'load_env: invalid name: %s\n' "$key" >&2
+        return 1
+        ;;
+    esac
     export "$key=$value"
   done < "$file"
 }
@@ -27,7 +35,9 @@ up() {
     return
   fi
   local levels=$1 destination=""
-  [[ "$levels" =~ ^[0-9]+$ ]] || return 2
+  case "$levels" in
+    ""|*[!0-9]*) return 2 ;;
+  esac
   levels=$((10#$levels))
   if [ "$levels" -eq 0 ]; then
     builtin cd
@@ -63,7 +73,7 @@ venv() {
       . .venv/bin/activate
       ;;
     deactivate|d)
-      declare -F deactivate >/dev/null || { printf 'No virtual environment is active\n' >&2; return 1; }
+      command -v deactivate >/dev/null 2>&1 || { printf 'No virtual environment is active\n' >&2; return 1; }
       deactivate
       ;;
     new|n) command python3 -m venv .venv ;;

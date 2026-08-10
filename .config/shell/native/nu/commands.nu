@@ -1,4 +1,4 @@
-# Shell-native commands that must mutate Nushell or preserve structured output.
+# Commands that must mutate Nushell or preserve structured output.
 def --env load_env [file: path = ".env"] {
     if not ($file | path exists) {
         error make {msg: $"load_env: ($file): file not found"}

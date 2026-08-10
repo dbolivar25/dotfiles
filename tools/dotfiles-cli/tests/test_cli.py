@@ -57,14 +57,13 @@ class CliTest(unittest.TestCase):
         )
         shell_root = self.context.shell_root
         (shell_root / "native" / "nu").mkdir(parents=True)
-        (shell_root / "native" / "fish" / "functions").mkdir(parents=True)
+        (shell_root / "native" / "fish").mkdir(parents=True)
+        (shell_root / "native" / "sh").mkdir(parents=True)
         (self.repo / "managed").mkdir()
         (self.repo / ".local" / "bin").mkdir(parents=True)
         (shell_root / "shell.toml").write_text(MANIFEST)
-        (shell_root / "native" / "bash.bash").write_text("")
-        (shell_root / "native" / "zsh.zsh").write_text("")
-        (shell_root / "native" / "nu" / "env.nu").write_text("")
-        (shell_root / "native" / "nu" / "config.nu").write_text("")
+        (shell_root / "native" / "sh" / "functions.sh").write_text("")
+        (shell_root / "native" / "nu" / "commands.nu").write_text("")
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
@@ -134,7 +133,7 @@ class CliTest(unittest.TestCase):
             compile_shell_image(self.context)
 
     def test_manifest_rejects_shared_native_command_collisions(self) -> None:
-        (self.context.native_dir / "bash.bash").write_text("gst() { :; }\n")
+        (self.context.native_dir / "sh" / "functions.sh").write_text("gst() { :; }\n")
         with self.assertRaisesRegex(
             DotfilesError, "shared command conflicts with native bash: gst"
         ):
@@ -313,7 +312,7 @@ class CliTest(unittest.TestCase):
         self.assertEqual(self.active_release(), release_b)
 
     def test_pruning_keeps_public_autoloads_and_two_private_releases(self) -> None:
-        fish_functions = self.context.native_dir / "fish" / "functions"
+        fish_functions = self.context.native_dir / "fish"
         (fish_functions / "retained_probe.fish").write_text(
             "function retained_probe\n    echo retained\nend\n"
         )

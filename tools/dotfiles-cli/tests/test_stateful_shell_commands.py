@@ -56,11 +56,11 @@ class StatefulShellCommandTests(unittest.TestCase):
             check=False,
         )
 
-    def source(self, family: str, shell: str) -> str:
+    def source(self, shell: str) -> str:
         if shell == "nu":
-            adapter = NATIVE / "nu" / "config.nu"
+            adapter = NATIVE / "nu" / "commands.nu"
         else:
-            adapter = NATIVE / f"{shell}.{shell}"
+            adapter = NATIVE / "sh" / "functions.sh"
         command = "source"
         if shell == "bash":
             command = "."
@@ -72,7 +72,7 @@ class StatefulShellCommandTests(unittest.TestCase):
             'test "$1 $2" = "-m venv" || exit 2\nmkdir -p "$3/bin"',
         )
         for shell in POSIX_SHELLS:
-            source = self.source("venv", shell)
+            source = self.source(shell)
             created = self.run_shell(
                 shell,
                 f"{source}; venv new; test -d .venv; venv remove; test ! -e .venv",
@@ -101,7 +101,7 @@ class StatefulShellCommandTests(unittest.TestCase):
             activate.parent.parent.rmdir()
 
     def test_nushell_venv_preserves_native_overlay_exports(self) -> None:
-        source = self.source("venv", "nu")
+        source = self.source("nu")
         bin_dir = self.root / ".venv" / "bin"
         bin_dir.mkdir(parents=True)
         (bin_dir / "activate.nu").write_text(
@@ -127,7 +127,7 @@ class StatefulShellCommandTests(unittest.TestCase):
             "# comment\n   # indented comment\n\nFIRST=one=two\nSPACED=two words  \n"
         )
         for shell in (*POSIX_SHELLS, "nu"):
-            source = self.source("load_env", shell)
+            source = self.source(shell)
             probe = 'printf "%s|%s>\\n" "$FIRST" "$SPACED"'
             if shell == "nu":
                 probe = 'print $"($env.FIRST)|($env.SPACED)>"'
@@ -142,8 +142,8 @@ class StatefulShellCommandTests(unittest.TestCase):
 
     def test_fish_commands_remain_individual_shared_autoloads(self) -> None:
         for name in ("venv", "load_env"):
-            self.assertTrue((NATIVE / "fish" / "functions" / f"{name}.fish").is_file())
-        self.assertTrue((NATIVE / "nu" / "config.nu").is_file())
+            self.assertTrue((NATIVE / "fish" / f"{name}.fish").is_file())
+        self.assertTrue((NATIVE / "nu" / "commands.nu").is_file())
 
 
 if __name__ == "__main__":

@@ -27,10 +27,9 @@ source has one shared manifest and a small native escape hatch:
 .config/shell/
 ├── shell.toml             # PATH, env, editor, shortcuts, wrappers, generators
 └── native/
-    ├── bash.bash
-    ├── zsh.zsh
-    ├── nu/config.nu
-    └── fish/functions/    # Fish-native autoload files
+    ├── sh/functions.sh    # Caller-state functions shared by Bash and Zsh
+    ├── nu/commands.nu     # Nushell state and structured commands
+    └── fish/*.fish        # Fish-native autoload functions
 ```
 
 `dotfiles shell apply` parses the TOML, copies the native files, prebuilds the
