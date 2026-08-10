@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 import subprocess
 import tempfile
 import textwrap
 import unittest
-
+from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 SCRIPT = REPO / ".local/bin/ghostty-theme"
@@ -89,8 +88,7 @@ class GhosttyThemeTests(unittest.TestCase):
                 [str(SCRIPT), "light"],
                 env=environment,
                 text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 check=False,
             )
 
