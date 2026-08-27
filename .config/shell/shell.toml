@@ -15,7 +15,7 @@ paths = [
   "/opt/homebrew/sbin",
 ]
 
-required_commands = ["amp", "git", "nvim", "ruby", "uv"]
+required_commands = ["R", "Rscript", "amp", "git", "nvim", "ruby", "uv"]
 
 [environment]
 BAT_THEME = "base16"

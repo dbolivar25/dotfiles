@@ -66,6 +66,11 @@ return {
 				ruby_lsp = {
 					root_dir = ruby_root({ "Gemfile", "gems.rb" }),
 				},
+				r_language_server = {
+					-- R.nvim owns the baseline language features; keep the separate
+					-- languageserver package out of project lockfiles unless needed.
+					enabled = false,
+				},
 				rubocop = {
 					root_dir = ruby_root({ "Gemfile", "gems.rb", ".rubocop.yml" }),
 				},
