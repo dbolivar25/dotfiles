@@ -16,9 +16,9 @@ function fish_prompt
     end
 
     if test -n "$git_timeout"
-        if set -l git_lines (command $git_timeout -s KILL 0.020s git --no-optional-locks -c status.aheadBehind=false status --porcelain=v1 --branch --untracked-files=no 2>/dev/null)
+        if set -l git_lines (command $git_timeout -s KILL 0.030s git --no-optional-locks -c status.aheadBehind=false status --porcelain=v1 --branch --untracked-files=no 2>/dev/null)
             if set -q git_lines[1]
-                set -l branch (string replace -r '^## ([^ ]+).*' '$1' -- $git_lines[1])
+                set -l branch (string replace -r '^## (.*?)(\.\.\..*)?$' '$1' -- $git_lines[1])
 
                 set_color brblack
                 echo -n "$branch"
