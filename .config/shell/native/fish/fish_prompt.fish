@@ -7,20 +7,29 @@ function fish_prompt
     set_color normal
     echo -n ' '
 
-    # Git segment
-    if command -q git
-        and test -d .git; or git rev-parse --git-dir >/dev/null 2>&1
-        set -l git_branch (git symbolic-ref --short HEAD 2>/dev/null; or git rev-parse --short HEAD 2>/dev/null)
-        set -l git_dirty (git status --porcelain 2>/dev/null)
+    set -l git_timeout
 
-        if test -n "$git_branch"
-            set_color brblack
-            echo -n "$git_branch"
-            if test -n "$git_dirty"
-                echo -n "*"
+    if command -q gtimeout
+        set git_timeout gtimeout
+    else if command -q timeout
+        set git_timeout timeout
+    end
+
+    if test -n "$git_timeout"
+        if set -l git_lines (command $git_timeout -s KILL 0.020s git --no-optional-locks -c status.aheadBehind=false status --porcelain=v1 --branch --untracked-files=no 2>/dev/null)
+            if set -q git_lines[1]
+                set -l branch (string replace -r '^## ([^ ]+).*' '$1' -- $git_lines[1])
+
+                set_color brblack
+                echo -n "$branch"
+
+                if test (count $git_lines) -gt 1
+                    echo -n '*'
+                end
+
+                set_color normal
+                echo -n ' '
             end
-            set_color normal
-            echo -n ' '
         end
     end
 
