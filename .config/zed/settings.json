@@ -55,7 +55,7 @@
     "enabled_in_text_threads": false
   },
   "icon_theme": {
-    "mode": "light",
+    "mode": "system",
     "light": "Zed (Default)",
     "dark": "Zed (Default)"
   },
@@ -276,11 +276,11 @@
   "file_scan_inclusions": [".env"],
   // Move all panel to the right
   "project_panel": {
+    "folder_indicator": "icon",
     "button": true,
     "default_width": 300,
     "dock": "left",
     "file_icons": true,
-    "folder_icons": true,
     "git_status": true,
     "scrollbar": {
       "show": "never"
@@ -303,7 +303,7 @@
   // "ui_font_family": "BlexMono Nerd Font Mono",
   "autosave": "on_focus_change",
   "theme": {
-    "mode": "light",
+    "mode": "system",
     "light": "Rosé Pine Dawn",
     "dark": "Rosé Pine"
   },

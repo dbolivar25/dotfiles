@@ -1,20 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-mode_file="${GHOSTTY_THEME_MODE_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/ghostty/theme-mode}"
 delta_args=(--paging=never)
 
-if [[ -r "$mode_file" ]]; then
-  mode="$(<"$mode_file")"
-
-  case "$mode" in
-    light)
-      delta_args+=(--light)
-      ;;
-    dark)
-      delta_args+=(--dark)
-      ;;
-  esac
+# Lazygit owns the terminal, so query macOS instead of terminal colors.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  if [[ "$(defaults read -g AppleInterfaceStyle 2>/dev/null || true)" == "Dark" ]]; then
+    delta_args+=(--dark)
+  else
+    delta_args+=(--light)
+  fi
 fi
 
 exec delta "${delta_args[@]}" "$@"

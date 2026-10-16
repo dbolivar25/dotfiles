@@ -1,5 +1,10 @@
 return {
 	{
+		"f-person/auto-dark-mode.nvim",
+		lazy = false,
+		opts = {},
+	},
+	{
 		"rose-pine/neovim",
 		name = "rose-pine",
 		priority = 1000,

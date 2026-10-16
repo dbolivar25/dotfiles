@@ -6,8 +6,7 @@ window-padding-y = 10
 window-padding-balance = true
 
 # Theme
-theme = Rose Pine Dawn
-config-file = ?theme.local
+theme = light:Rose Pine Dawn,dark:Rose Pine
 # custom-shader = ~/.config/ghostty/shaders/pearl-bloom.glsl
 
 # Fix green

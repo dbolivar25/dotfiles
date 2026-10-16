@@ -4,7 +4,7 @@ agent_panel_sort = "spaces"
 
 [theme]
 name = "rose-pine-dawn"
-auto_switch = false
+auto_switch = true
 dark_name = "rose-pine"
 light_name = "rose-pine-dawn"
 

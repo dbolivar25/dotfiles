@@ -1,4 +1,3 @@
-require("config.theme").setup()
 require("config.lazy")
 require("config.options")
 require("config.filetypes")
