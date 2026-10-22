@@ -495,6 +495,33 @@ class CliTest(unittest.TestCase):
         self.assertIn("EXAMPLE_GENERATED=1", image.private_files["bash/init.bash"])
         self.assertNotIn("EXAMPLE_GENERATED=1", image.public_files["bash/init.bash"])
 
+    def test_generator_reads_checkout_config_before_stow(self) -> None:
+        fresh_home = self.repo / "unlinked-home"
+        fresh_home.mkdir()
+        context = Context(self.repo, fresh_home, self.repo)
+        config = self.repo / ".config/example/init.bash"
+        config.parent.mkdir(parents=True)
+        config.write_text("export EXAMPLE_GENERATED=from_checkout\n")
+        executable = self.repo / ".local/bin/example"
+        executable.write_text(
+            "#!/bin/sh\n"
+            "if [ \"${1-}\" = --version ]; then echo 'example 1.0'; "
+            'else cat "$XDG_CONFIG_HOME/example/init.bash"; fi\n'
+        )
+        executable.chmod(0o755)
+        self.context.shell_manifest.write_text(
+            MANIFEST.replace(
+                "[integrations]\n",
+                f"[integrations.example]\nbash = [{json.dumps(str(executable))}]\n",
+            )
+        )
+        image = compile_shell_image(context)
+        self.assertFalse((fresh_home / ".config").exists())
+        self.assertIn(
+            "export EXAMPLE_GENERATED=from_checkout",
+            image.private_files["bash/init.bash"],
+        )
+
     def test_shell_check_rejects_invalid_private_generator_syntax(self) -> None:
         executable = self.repo / ".local" / "bin" / "example"
         executable.write_text(

@@ -53,6 +53,7 @@ class SourceCleanupTests(unittest.TestCase):
             coverage,
             {
                 "starship": {"bash", "zsh"},
+                "theme": {"fish"},
                 "zoxide": {"bash", "fish", "zsh", "nu"},
             },
         )

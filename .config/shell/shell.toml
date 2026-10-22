@@ -169,6 +169,14 @@ description = "Run Claude with the --dangerously-skip-permissions flag"
 bash = ["starship", "init", "bash", "--print-full-init"]
 zsh = ["starship", "init", "zsh"]
 
+[integrations.theme]
+fish = [
+  "fish",
+  "--no-config",
+  "-c",
+  "fish_config theme choose 'Rosé Pine'; and fish_config theme dump | string replace --regex '^' 'set -gu '",
+]
+
 [integrations.zoxide]
 bash = ["zoxide", "init", "bash", "--cmd", "cd"]
 fish = ["zoxide", "init", "fish", "--cmd", "cd"]

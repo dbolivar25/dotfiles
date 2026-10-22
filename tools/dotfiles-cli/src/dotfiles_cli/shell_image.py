@@ -483,6 +483,7 @@ def _generator_environment(context: Context, config: ShellConfig) -> dict[str, s
     ]
     return {
         "HOME": str(context.home),
+        "XDG_CONFIG_HOME": str(context.repo / ".config"),
         "LOGNAME": context.home.name,
         "PATH": ":".join(dict.fromkeys(stable)),
         "SHELL": "/bin/zsh",

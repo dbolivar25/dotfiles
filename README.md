@@ -60,6 +60,11 @@ arguments.” Put caller-state behavior such as `cd`, environment mutation,
 virtual-environment activation, prompts, or structured Nu commands in
 `native/`. Put deterministic third-party initialization in `[integrations]`.
 
+Generators read configuration from the checkout's `.config/` directory. The
+Fish theme integration uses Fish to load `.config/fish/themes/Rosé Pine.theme`
+and emit native settings at build time. Run `dotfiles shell apply` after theme
+edits.
+
 ## Common operations
 
 ```sh
