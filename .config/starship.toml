@@ -1,5 +1,6 @@
 add_newline = false
-format = "$directory$git_branch${custom.git_dirty}$python\n$character"
+# format = "$directory$git_branch${custom.git_dirty}$python\n$character"
+format = "$directory$python\n$character"
 
 [directory]
 format = "[$path]($style) "
